@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Secure Review</title>
+  <style>
+    :root { --ink:#172126; --muted:#66777a; --paper:#f4f0e8; --panel:#fffdf8; --teal:#0b7774; --red:#bd3c31; --amber:#c48224; --line:#d9d2c4; }
+    * { box-sizing:border-box; } body { margin:0; color:var(--ink); background:radial-gradient(circle at 10% 0%, #dcebe4, transparent 35%), var(--paper); font-family: Georgia, serif; }
+    main { width:min(1180px, 92vw); margin:0 auto; padding:48px 0 64px; } header { display:flex; justify-content:space-between; gap:24px; align-items:end; border-bottom:1px solid var(--line); padding-bottom:24px; } h1 { font-size:clamp(2.5rem, 6vw, 5.5rem); line-height:.9; margin:0; letter-spacing:0; } .kicker { color:var(--teal); font:700 .78rem/1.2 system-ui,sans-serif; letter-spacing:.12em; text-transform:uppercase; } .sub { max-width:340px; color:var(--muted); font:1rem/1.5 system-ui,sans-serif; }
+    .workspace { display:grid; grid-template-columns:1.1fr .9fr; gap:24px; margin-top:28px; } section { background:color-mix(in srgb, var(--panel) 92%, transparent); border:1px solid var(--line); padding:22px; } label { display:block; font:700 .75rem system-ui,sans-serif; letter-spacing:.08em; text-transform:uppercase; margin-bottom:8px; } input, textarea { width:100%; border:1px solid var(--line); background:#fbfaf5; color:var(--ink); font:15px/1.5 Consolas,monospace; padding:12px; } textarea { min-height:420px; resize:vertical; } button { background:var(--teal); color:white; border:0; padding:13px 20px; font:700 .8rem system-ui,sans-serif; text-transform:uppercase; letter-spacing:.08em; cursor:pointer; margin-top:14px; } button:disabled { opacity:.5; cursor:wait; } .status { color:var(--muted); font:14px system-ui,sans-serif; min-height:22px; margin-top:12px; }
+    .empty { color:var(--muted); font:15px/1.5 system-ui,sans-serif; } .summary { border-left:5px solid var(--teal); padding-left:14px; margin-bottom:18px; } .summary h2 { margin:0 0 8px; } .counts { display:flex; gap:8px; flex-wrap:wrap; font:700 12px system-ui,sans-serif; } .count { padding:6px 8px; background:#e8eee8; } .finding { border-top:1px solid var(--line); padding:16px 0; } .finding h3 { margin:0 0 6px; font-size:1.25rem; } .finding p { font:14px/1.5 system-ui,sans-serif; margin:6px 0; } .badge { display:inline-block; font:700 11px system-ui,sans-serif; padding:4px 6px; text-transform:uppercase; background:#e7e2d6; } .critical,.high { color:var(--red); } .medium { color:var(--amber); } pre { overflow:auto; white-space:pre-wrap; background:#f0ede4; padding:10px; font:12px/1.45 Consolas,monospace; } .roadmap { font:14px/1.5 system-ui,sans-serif; padding-left:20px; }
+    @media (max-width:800px) { header,.workspace { display:block; } .sub { margin-top:18px; } section { margin-top:18px; } textarea { min-height:300px; } }
+  </style>
+</head>
+<body><main>
+  <header><div><div class="kicker">Evidence-backed code review</div><h1>Secure<br>Review.</h1></div><div class="sub">Paste Python or Java. Get findings with exact evidence, severity, CWE mapping, and a practical remediation path.</div></header>
+  <div class="workspace"><section><label for="filename">Source file</label><input id="filename" value="app.py" aria-label="Source filename"><label for="code" style="margin-top:18px">Code</label><textarea id="code" spellcheck="false">from flask import request
+
+def user():
+    user_id = request.args['id']
+    cursor.execute(f"SELECT * FROM users WHERE id = {user_id}")
+    return "ok"
+</textarea><button id="run">Run review</button><div class="status" id="status"></div></section><section id="results"><div class="empty">Your review findings will appear here.</div></section></div>
+</main><script>
+const run = document.querySelector('#run'); const status = document.querySelector('#status'); const results = document.querySelector('#results');
+run.addEventListener('click', async () => { run.disabled=true; status.textContent='Running evidence checks…'; results.innerHTML=''; try { const response=await fetch('/api/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filename:document.querySelector('#filename').value,code:document.querySelector('#code').value})}); const review=await response.json(); if(!response.ok) throw new Error(review.detail||'Review failed'); render(review); status.textContent=`${review.findings.length} finding(s) across ${review.lines} lines`; } catch(error) { status.textContent=error.message; } finally { run.disabled=false; } });
+function render(review) { const s=review.summary; const counts=Object.entries(s.counts).map(([key,value])=>`<span class="count ${key}">${key}: ${value}</span>`).join(''); const findings=review.findings.length?review.findings.map(f=>`<article class="finding"><span class="badge ${f.severity}">${f.severity} · line ${f.line_start}</span><h3>${escapeHtml(f.title)}</h3><p>${escapeHtml(f.description)}</p><pre>${escapeHtml(f.evidence)}</pre><p><strong>${f.cwe||'Quality'}</strong> ${f.fix?escapeHtml(f.fix.explanation):''}</p></article>`).join(''):'<p class="empty">No evidence-backed findings.</p>'; results.innerHTML=`<div class="summary"><h2>${s.verdict.replace('_',' ')}</h2><div class="counts">${counts}</div></div><h2>Findings</h2>${findings}<h2>Roadmap</h2><ul class="roadmap">${s.roadmap.map(item=>`<li>${escapeHtml(item)}</li>`).join('')}</ul>`; }
+function escapeHtml(value) { return value.replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char])); }
+</script></body></html>

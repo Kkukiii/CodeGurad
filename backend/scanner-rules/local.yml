@@ -1,0 +1,26 @@
+rules:
+  - id: local-python-hardcoded-secret
+    languages: [python]
+    message: Hardcoded credential-like value
+    severity: WARNING
+    patterns:
+      - pattern: $NAME = "$VALUE"
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: (?i)(password|secret|api[_-]?key|token)
+
+  - id: local-python-sql-interpolation
+    languages: [python]
+    message: SQL query uses string interpolation
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: $DB.execute(f"...")
+          - pattern: $DB.execute(f'...')
+          - pattern: $DB.execute("..." + $VALUE)
+
+  - id: local-java-object-deserialization
+    languages: [java]
+    message: Java native object deserialization can execute untrusted data
+    severity: ERROR
+    pattern: new ObjectInputStream(...)

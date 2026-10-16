@@ -1,0 +1,5228 @@
+{
+  "dataset_name": "AI Code Review Security Knowledge Base",
+  "version": "1.0",
+  "purpose": "Synthetic RAG and model-testing data for code review, security analysis, remediation, and structured JSON validation.",
+  "record_count": 180,
+  "records": [
+    {
+      "id": "KB-0001",
+      "language": "python",
+      "type": "security",
+      "category": "sql_injection",
+      "severity": "high",
+      "cwe": "CWE-89",
+      "owasp": "A03:2021",
+      "title": "Sql Injection",
+      "description": "Synthetic python example for detecting sql injection.",
+      "vulnerable_code": "query = \"SELECT * FROM users WHERE id = \" + user_id",
+      "fixed_code": "query = \"SELECT * FROM users WHERE id = ?\"\nexecute(query, (user_id,))",
+      "why_it_matters": "The pattern can create sql injection risk or reduce reliability.",
+      "remediation": "Use parameterized queries.",
+      "detection_signals": [
+        "sql_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "sql injection",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for sql injection and return a structured finding."
+    },
+    {
+      "id": "KB-0002",
+      "language": "java",
+      "type": "security",
+      "category": "command_injection",
+      "severity": "critical",
+      "cwe": "CWE-78",
+      "owasp": "A03:2021",
+      "title": "Command Injection",
+      "description": "Synthetic java example for detecting command injection.",
+      "vulnerable_code": "Runtime.getRuntime().exec(\"ping \" + host, shell=True)",
+      "fixed_code": "new ProcessBuilder(\"ping\", host).start()",
+      "why_it_matters": "The pattern can create command injection risk or reduce reliability.",
+      "remediation": "Avoid shell interpolation; pass arguments safely.",
+      "detection_signals": [
+        "command_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "command injection",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for command injection and return a structured finding."
+    },
+    {
+      "id": "KB-0003",
+      "language": "python",
+      "type": "security",
+      "category": "hardcoded_secret",
+      "severity": "high",
+      "cwe": "CWE-798",
+      "owasp": "A07:2021",
+      "title": "Hardcoded Secret",
+      "description": "Synthetic python example for detecting hardcoded secret.",
+      "vulnerable_code": "API_KEY = \"sk-example-secret\"",
+      "fixed_code": "API_KEY = os.environ['API_KEY']",
+      "why_it_matters": "The pattern can create hardcoded secret risk or reduce reliability.",
+      "remediation": "Load secrets from secure environment/configuration.",
+      "detection_signals": [
+        "hardcoded_secret",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "hardcoded secret",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for hardcoded secret and return a structured finding."
+    },
+    {
+      "id": "KB-0004",
+      "language": "java",
+      "type": "security",
+      "category": "path_traversal",
+      "severity": "high",
+      "cwe": "CWE-22",
+      "owasp": "A01:2021",
+      "title": "Path Traversal",
+      "description": "Synthetic java example for detecting path traversal.",
+      "vulnerable_code": "new FileInputStream(\"/srv/files/\" + filename).read()",
+      "fixed_code": "safe = Path(filename).name\nopen(Path('/srv/files') / safe)",
+      "why_it_matters": "The pattern can create path traversal risk or reduce reliability.",
+      "remediation": "Normalize and constrain paths.",
+      "detection_signals": [
+        "path_traversal",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "path traversal",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for path traversal and return a structured finding."
+    },
+    {
+      "id": "KB-0005",
+      "language": "python",
+      "type": "security",
+      "category": "unsafe_deserialization",
+      "severity": "critical",
+      "cwe": "CWE-502",
+      "owasp": "A08:2021",
+      "title": "Unsafe Deserialization",
+      "description": "Synthetic python example for detecting unsafe deserialization.",
+      "vulnerable_code": "pickle.loads(user_input)",
+      "fixed_code": "data = json.loads(user_input)",
+      "why_it_matters": "The pattern can create unsafe deserialization risk or reduce reliability.",
+      "remediation": "Use safe data formats and validation.",
+      "detection_signals": [
+        "unsafe_deserialization",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "unsafe deserialization",
+        "python",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for unsafe deserialization and return a structured finding."
+    },
+    {
+      "id": "KB-0006",
+      "language": "java",
+      "type": "security",
+      "category": "xss",
+      "severity": "high",
+      "cwe": "CWE-79",
+      "owasp": "A03:2021",
+      "title": "Xss",
+      "description": "Synthetic java example for detecting xss.",
+      "vulnerable_code": "return \"<div>\" + username + \"</div>\"",
+      "fixed_code": "return render_template('user.html', username=username)",
+      "why_it_matters": "The pattern can create xss risk or reduce reliability.",
+      "remediation": "Contextually encode untrusted output.",
+      "detection_signals": [
+        "xss",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "xss",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for xss and return a structured finding."
+    },
+    {
+      "id": "KB-0007",
+      "language": "python",
+      "type": "security",
+      "category": "weak_crypto",
+      "severity": "medium",
+      "cwe": "CWE-327",
+      "owasp": "A02:2021",
+      "title": "Weak Crypto",
+      "description": "Synthetic python example for detecting weak crypto.",
+      "vulnerable_code": "hashlib.md5(password.encode()).hexdigest()",
+      "fixed_code": "hashlib.sha256(password.encode()).hexdigest()",
+      "why_it_matters": "The pattern can create weak crypto risk or reduce reliability.",
+      "remediation": "Use modern cryptographic primitives.",
+      "detection_signals": [
+        "weak_crypto",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "weak crypto",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for weak crypto and return a structured finding."
+    },
+    {
+      "id": "KB-0008",
+      "language": "java",
+      "type": "security",
+      "category": "missing_auth",
+      "severity": "critical",
+      "cwe": "CWE-306",
+      "owasp": "A07:2021",
+      "title": "Missing Auth",
+      "description": "Synthetic java example for detecting missing auth.",
+      "vulnerable_code": "@app.get('/admin')\ndef admin(): return admin_data()",
+      "fixed_code": "@requires_admin\ndef admin(): return admin_data()",
+      "why_it_matters": "The pattern can create missing auth risk or reduce reliability.",
+      "remediation": "Enforce authorization on protected operations.",
+      "detection_signals": [
+        "missing_auth",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing auth",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing auth and return a structured finding."
+    },
+    {
+      "id": "KB-0009",
+      "language": "python",
+      "type": "security",
+      "category": "insecure_random",
+      "severity": "medium",
+      "cwe": "CWE-330",
+      "owasp": "A02:2021",
+      "title": "Insecure Random",
+      "description": "Synthetic python example for detecting insecure random.",
+      "vulnerable_code": "token = random.randint(100000, 999999)",
+      "fixed_code": "token = secrets.randbelow(900000) + 100000",
+      "why_it_matters": "The pattern can create insecure random risk or reduce reliability.",
+      "remediation": "Use cryptographically secure randomness for security tokens.",
+      "detection_signals": [
+        "insecure_random",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "insecure random",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for insecure random and return a structured finding."
+    },
+    {
+      "id": "KB-0010",
+      "language": "java",
+      "type": "quality",
+      "category": "resource_leak",
+      "severity": "medium",
+      "cwe": "CWE-772",
+      "owasp": null,
+      "title": "Resource Leak",
+      "description": "Synthetic java example for detecting resource leak.",
+      "vulnerable_code": "f = new FileInputStream(path); data = f.read()",
+      "fixed_code": "with open(path, encoding='utf-8') as f:\n    data = f.read()",
+      "why_it_matters": "The pattern can create resource leak risk or reduce reliability.",
+      "remediation": "Use context managers or try-with-resources.",
+      "detection_signals": [
+        "resource_leak",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "resource leak",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for resource leak and return a structured finding."
+    },
+    {
+      "id": "KB-0011",
+      "language": "python",
+      "type": "quality",
+      "category": "broad_exception",
+      "severity": "low",
+      "cwe": "CWE-396",
+      "owasp": null,
+      "title": "Broad Exception",
+      "description": "Synthetic python example for detecting broad exception.",
+      "vulnerable_code": "try:\n    work()\nexcept Exception:\n    pass",
+      "fixed_code": "try:\n    work()\nexcept ValueError as exc:\n    logger.warning('%s', exc)",
+      "why_it_matters": "The pattern can create broad exception risk or reduce reliability.",
+      "remediation": "Catch expected exception types and handle them.",
+      "detection_signals": [
+        "broad_exception",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "broad exception",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for broad exception and return a structured finding."
+    },
+    {
+      "id": "KB-0012",
+      "language": "java",
+      "type": "quality",
+      "category": "mutable_default",
+      "severity": "low",
+      "cwe": "CWE-665",
+      "owasp": null,
+      "title": "Mutable Default",
+      "description": "Synthetic java example for detecting mutable default.",
+      "vulnerable_code": "def add_item(item, items=[]): items.append(item)",
+      "fixed_code": "def add_item(item, items=None):\n    items = [] if items is None else items\n    items.append(item)",
+      "why_it_matters": "The pattern can create mutable default risk or reduce reliability.",
+      "remediation": "Avoid shared mutable defaults.",
+      "detection_signals": [
+        "mutable_default",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "mutable default",
+        "java",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for mutable default and return a structured finding."
+    },
+    {
+      "id": "KB-0013",
+      "language": "python",
+      "type": "bug",
+      "category": "null_dereference",
+      "severity": "medium",
+      "cwe": "CWE-476",
+      "owasp": null,
+      "title": "Null Dereference",
+      "description": "Synthetic python example for detecting null dereference.",
+      "vulnerable_code": "user = find_user(uid)\nreturn user.name",
+      "fixed_code": "user = find_user(uid)\nif user is None: raise NotFound()\nreturn user.name",
+      "why_it_matters": "The pattern can create null dereference risk or reduce reliability.",
+      "remediation": "Validate nullable results before dereferencing.",
+      "detection_signals": [
+        "null_dereference",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "null dereference",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for null dereference and return a structured finding."
+    },
+    {
+      "id": "KB-0014",
+      "language": "java",
+      "type": "bug",
+      "category": "race_condition",
+      "severity": "high",
+      "cwe": "CWE-362",
+      "owasp": null,
+      "title": "Race Condition",
+      "description": "Synthetic java example for detecting race condition.",
+      "vulnerable_code": "if not exists(path):\n    create(path)",
+      "fixed_code": "with file_lock(path):\n    if not exists(path): create(path)",
+      "why_it_matters": "The pattern can create race condition risk or reduce reliability.",
+      "remediation": "Use atomic operations or appropriate synchronization.",
+      "detection_signals": [
+        "race_condition",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "race condition",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for race condition and return a structured finding."
+    },
+    {
+      "id": "KB-0015",
+      "language": "python",
+      "type": "performance",
+      "category": "inefficient_loop",
+      "severity": "low",
+      "cwe": "CWE-407",
+      "owasp": null,
+      "title": "Inefficient Loop",
+      "description": "Synthetic python example for detecting inefficient loop.",
+      "vulnerable_code": "for x in items:\n    for y in items:\n        compare(x, y)",
+      "fixed_code": "seen = set(items)\nfor x in seen: compare(x)",
+      "why_it_matters": "The pattern can create inefficient loop risk or reduce reliability.",
+      "remediation": "Avoid unnecessary nested scans and repeated work.",
+      "detection_signals": [
+        "inefficient_loop",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "inefficient loop",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for inefficient loop and return a structured finding."
+    },
+    {
+      "id": "KB-0016",
+      "language": "java",
+      "type": "best_practice",
+      "category": "missing_validation",
+      "severity": "medium",
+      "cwe": "CWE-20",
+      "owasp": "A04:2021",
+      "title": "Missing Validation",
+      "description": "Synthetic java example for detecting missing validation.",
+      "vulnerable_code": "process_email(request.json['email'])",
+      "fixed_code": "email = EmailStr(request.json['email'])\nprocess_email(email)",
+      "why_it_matters": "The pattern can create missing validation risk or reduce reliability.",
+      "remediation": "Validate untrusted input at the boundary.",
+      "detection_signals": [
+        "missing_validation",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing validation",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing validation and return a structured finding."
+    },
+    {
+      "id": "KB-0017",
+      "language": "python",
+      "type": "security",
+      "category": "sql_injection",
+      "severity": "high",
+      "cwe": "CWE-89",
+      "owasp": "A03:2021",
+      "title": "Sql Injection",
+      "description": "Synthetic python example for detecting sql injection.",
+      "vulnerable_code": "query = \"SELECT * FROM users WHERE id = \" + user_id",
+      "fixed_code": "query = \"SELECT * FROM users WHERE id = ?\"\nexecute(query, (user_id,))",
+      "why_it_matters": "The pattern can create sql injection risk or reduce reliability.",
+      "remediation": "Use parameterized queries.",
+      "detection_signals": [
+        "sql_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "sql injection",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for sql injection and return a structured finding."
+    },
+    {
+      "id": "KB-0018",
+      "language": "java",
+      "type": "security",
+      "category": "command_injection",
+      "severity": "critical",
+      "cwe": "CWE-78",
+      "owasp": "A03:2021",
+      "title": "Command Injection",
+      "description": "Synthetic java example for detecting command injection.",
+      "vulnerable_code": "Runtime.getRuntime().exec(\"ping \" + host, shell=True)",
+      "fixed_code": "new ProcessBuilder(\"ping\", host).start()",
+      "why_it_matters": "The pattern can create command injection risk or reduce reliability.",
+      "remediation": "Avoid shell interpolation; pass arguments safely.",
+      "detection_signals": [
+        "command_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "command injection",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for command injection and return a structured finding."
+    },
+    {
+      "id": "KB-0019",
+      "language": "python",
+      "type": "security",
+      "category": "hardcoded_secret",
+      "severity": "high",
+      "cwe": "CWE-798",
+      "owasp": "A07:2021",
+      "title": "Hardcoded Secret",
+      "description": "Synthetic python example for detecting hardcoded secret.",
+      "vulnerable_code": "API_KEY = \"sk-example-secret\"",
+      "fixed_code": "API_KEY = os.environ['API_KEY']",
+      "why_it_matters": "The pattern can create hardcoded secret risk or reduce reliability.",
+      "remediation": "Load secrets from secure environment/configuration.",
+      "detection_signals": [
+        "hardcoded_secret",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "hardcoded secret",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for hardcoded secret and return a structured finding."
+    },
+    {
+      "id": "KB-0020",
+      "language": "java",
+      "type": "security",
+      "category": "path_traversal",
+      "severity": "high",
+      "cwe": "CWE-22",
+      "owasp": "A01:2021",
+      "title": "Path Traversal",
+      "description": "Synthetic java example for detecting path traversal.",
+      "vulnerable_code": "new FileInputStream(\"/srv/files/\" + filename).read()",
+      "fixed_code": "safe = Path(filename).name\nopen(Path('/srv/files') / safe)",
+      "why_it_matters": "The pattern can create path traversal risk or reduce reliability.",
+      "remediation": "Normalize and constrain paths.",
+      "detection_signals": [
+        "path_traversal",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "path traversal",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for path traversal and return a structured finding."
+    },
+    {
+      "id": "KB-0021",
+      "language": "python",
+      "type": "security",
+      "category": "unsafe_deserialization",
+      "severity": "critical",
+      "cwe": "CWE-502",
+      "owasp": "A08:2021",
+      "title": "Unsafe Deserialization",
+      "description": "Synthetic python example for detecting unsafe deserialization.",
+      "vulnerable_code": "pickle.loads(user_input)",
+      "fixed_code": "data = json.loads(user_input)",
+      "why_it_matters": "The pattern can create unsafe deserialization risk or reduce reliability.",
+      "remediation": "Use safe data formats and validation.",
+      "detection_signals": [
+        "unsafe_deserialization",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "unsafe deserialization",
+        "python",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for unsafe deserialization and return a structured finding."
+    },
+    {
+      "id": "KB-0022",
+      "language": "java",
+      "type": "security",
+      "category": "xss",
+      "severity": "high",
+      "cwe": "CWE-79",
+      "owasp": "A03:2021",
+      "title": "Xss",
+      "description": "Synthetic java example for detecting xss.",
+      "vulnerable_code": "return \"<div>\" + username + \"</div>\"",
+      "fixed_code": "return render_template('user.html', username=username)",
+      "why_it_matters": "The pattern can create xss risk or reduce reliability.",
+      "remediation": "Contextually encode untrusted output.",
+      "detection_signals": [
+        "xss",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "xss",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for xss and return a structured finding."
+    },
+    {
+      "id": "KB-0023",
+      "language": "python",
+      "type": "security",
+      "category": "weak_crypto",
+      "severity": "medium",
+      "cwe": "CWE-327",
+      "owasp": "A02:2021",
+      "title": "Weak Crypto",
+      "description": "Synthetic python example for detecting weak crypto.",
+      "vulnerable_code": "hashlib.md5(password.encode()).hexdigest()",
+      "fixed_code": "hashlib.sha256(password.encode()).hexdigest()",
+      "why_it_matters": "The pattern can create weak crypto risk or reduce reliability.",
+      "remediation": "Use modern cryptographic primitives.",
+      "detection_signals": [
+        "weak_crypto",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "weak crypto",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for weak crypto and return a structured finding."
+    },
+    {
+      "id": "KB-0024",
+      "language": "java",
+      "type": "security",
+      "category": "missing_auth",
+      "severity": "critical",
+      "cwe": "CWE-306",
+      "owasp": "A07:2021",
+      "title": "Missing Auth",
+      "description": "Synthetic java example for detecting missing auth.",
+      "vulnerable_code": "@app.get('/admin')\ndef admin(): return admin_data()",
+      "fixed_code": "@requires_admin\ndef admin(): return admin_data()",
+      "why_it_matters": "The pattern can create missing auth risk or reduce reliability.",
+      "remediation": "Enforce authorization on protected operations.",
+      "detection_signals": [
+        "missing_auth",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing auth",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing auth and return a structured finding."
+    },
+    {
+      "id": "KB-0025",
+      "language": "python",
+      "type": "security",
+      "category": "insecure_random",
+      "severity": "medium",
+      "cwe": "CWE-330",
+      "owasp": "A02:2021",
+      "title": "Insecure Random",
+      "description": "Synthetic python example for detecting insecure random.",
+      "vulnerable_code": "token = random.randint(100000, 999999)",
+      "fixed_code": "token = secrets.randbelow(900000) + 100000",
+      "why_it_matters": "The pattern can create insecure random risk or reduce reliability.",
+      "remediation": "Use cryptographically secure randomness for security tokens.",
+      "detection_signals": [
+        "insecure_random",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "insecure random",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for insecure random and return a structured finding."
+    },
+    {
+      "id": "KB-0026",
+      "language": "java",
+      "type": "quality",
+      "category": "resource_leak",
+      "severity": "medium",
+      "cwe": "CWE-772",
+      "owasp": null,
+      "title": "Resource Leak",
+      "description": "Synthetic java example for detecting resource leak.",
+      "vulnerable_code": "f = new FileInputStream(path); data = f.read()",
+      "fixed_code": "with open(path, encoding='utf-8') as f:\n    data = f.read()",
+      "why_it_matters": "The pattern can create resource leak risk or reduce reliability.",
+      "remediation": "Use context managers or try-with-resources.",
+      "detection_signals": [
+        "resource_leak",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "resource leak",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for resource leak and return a structured finding."
+    },
+    {
+      "id": "KB-0027",
+      "language": "python",
+      "type": "quality",
+      "category": "broad_exception",
+      "severity": "low",
+      "cwe": "CWE-396",
+      "owasp": null,
+      "title": "Broad Exception",
+      "description": "Synthetic python example for detecting broad exception.",
+      "vulnerable_code": "try:\n    work()\nexcept Exception:\n    pass",
+      "fixed_code": "try:\n    work()\nexcept ValueError as exc:\n    logger.warning('%s', exc)",
+      "why_it_matters": "The pattern can create broad exception risk or reduce reliability.",
+      "remediation": "Catch expected exception types and handle them.",
+      "detection_signals": [
+        "broad_exception",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "broad exception",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for broad exception and return a structured finding."
+    },
+    {
+      "id": "KB-0028",
+      "language": "java",
+      "type": "quality",
+      "category": "mutable_default",
+      "severity": "low",
+      "cwe": "CWE-665",
+      "owasp": null,
+      "title": "Mutable Default",
+      "description": "Synthetic java example for detecting mutable default.",
+      "vulnerable_code": "def add_item(item, items=[]): items.append(item)",
+      "fixed_code": "def add_item(item, items=None):\n    items = [] if items is None else items\n    items.append(item)",
+      "why_it_matters": "The pattern can create mutable default risk or reduce reliability.",
+      "remediation": "Avoid shared mutable defaults.",
+      "detection_signals": [
+        "mutable_default",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "mutable default",
+        "java",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for mutable default and return a structured finding."
+    },
+    {
+      "id": "KB-0029",
+      "language": "python",
+      "type": "bug",
+      "category": "null_dereference",
+      "severity": "medium",
+      "cwe": "CWE-476",
+      "owasp": null,
+      "title": "Null Dereference",
+      "description": "Synthetic python example for detecting null dereference.",
+      "vulnerable_code": "user = find_user(uid)\nreturn user.name",
+      "fixed_code": "user = find_user(uid)\nif user is None: raise NotFound()\nreturn user.name",
+      "why_it_matters": "The pattern can create null dereference risk or reduce reliability.",
+      "remediation": "Validate nullable results before dereferencing.",
+      "detection_signals": [
+        "null_dereference",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "null dereference",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for null dereference and return a structured finding."
+    },
+    {
+      "id": "KB-0030",
+      "language": "java",
+      "type": "bug",
+      "category": "race_condition",
+      "severity": "high",
+      "cwe": "CWE-362",
+      "owasp": null,
+      "title": "Race Condition",
+      "description": "Synthetic java example for detecting race condition.",
+      "vulnerable_code": "if not exists(path):\n    create(path)",
+      "fixed_code": "with file_lock(path):\n    if not exists(path): create(path)",
+      "why_it_matters": "The pattern can create race condition risk or reduce reliability.",
+      "remediation": "Use atomic operations or appropriate synchronization.",
+      "detection_signals": [
+        "race_condition",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "race condition",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for race condition and return a structured finding."
+    },
+    {
+      "id": "KB-0031",
+      "language": "python",
+      "type": "performance",
+      "category": "inefficient_loop",
+      "severity": "low",
+      "cwe": "CWE-407",
+      "owasp": null,
+      "title": "Inefficient Loop",
+      "description": "Synthetic python example for detecting inefficient loop.",
+      "vulnerable_code": "for x in items:\n    for y in items:\n        compare(x, y)",
+      "fixed_code": "seen = set(items)\nfor x in seen: compare(x)",
+      "why_it_matters": "The pattern can create inefficient loop risk or reduce reliability.",
+      "remediation": "Avoid unnecessary nested scans and repeated work.",
+      "detection_signals": [
+        "inefficient_loop",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "inefficient loop",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for inefficient loop and return a structured finding."
+    },
+    {
+      "id": "KB-0032",
+      "language": "java",
+      "type": "best_practice",
+      "category": "missing_validation",
+      "severity": "medium",
+      "cwe": "CWE-20",
+      "owasp": "A04:2021",
+      "title": "Missing Validation",
+      "description": "Synthetic java example for detecting missing validation.",
+      "vulnerable_code": "process_email(request.json['email'])",
+      "fixed_code": "email = EmailStr(request.json['email'])\nprocess_email(email)",
+      "why_it_matters": "The pattern can create missing validation risk or reduce reliability.",
+      "remediation": "Validate untrusted input at the boundary.",
+      "detection_signals": [
+        "missing_validation",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing validation",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing validation and return a structured finding."
+    },
+    {
+      "id": "KB-0033",
+      "language": "python",
+      "type": "security",
+      "category": "sql_injection",
+      "severity": "high",
+      "cwe": "CWE-89",
+      "owasp": "A03:2021",
+      "title": "Sql Injection",
+      "description": "Synthetic python example for detecting sql injection.",
+      "vulnerable_code": "query = \"SELECT * FROM users WHERE id = \" + user_id",
+      "fixed_code": "query = \"SELECT * FROM users WHERE id = ?\"\nexecute(query, (user_id,))",
+      "why_it_matters": "The pattern can create sql injection risk or reduce reliability.",
+      "remediation": "Use parameterized queries.",
+      "detection_signals": [
+        "sql_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "sql injection",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for sql injection and return a structured finding."
+    },
+    {
+      "id": "KB-0034",
+      "language": "java",
+      "type": "security",
+      "category": "command_injection",
+      "severity": "critical",
+      "cwe": "CWE-78",
+      "owasp": "A03:2021",
+      "title": "Command Injection",
+      "description": "Synthetic java example for detecting command injection.",
+      "vulnerable_code": "Runtime.getRuntime().exec(\"ping \" + host, shell=True)",
+      "fixed_code": "new ProcessBuilder(\"ping\", host).start()",
+      "why_it_matters": "The pattern can create command injection risk or reduce reliability.",
+      "remediation": "Avoid shell interpolation; pass arguments safely.",
+      "detection_signals": [
+        "command_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "command injection",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for command injection and return a structured finding."
+    },
+    {
+      "id": "KB-0035",
+      "language": "python",
+      "type": "security",
+      "category": "hardcoded_secret",
+      "severity": "high",
+      "cwe": "CWE-798",
+      "owasp": "A07:2021",
+      "title": "Hardcoded Secret",
+      "description": "Synthetic python example for detecting hardcoded secret.",
+      "vulnerable_code": "API_KEY = \"sk-example-secret\"",
+      "fixed_code": "API_KEY = os.environ['API_KEY']",
+      "why_it_matters": "The pattern can create hardcoded secret risk or reduce reliability.",
+      "remediation": "Load secrets from secure environment/configuration.",
+      "detection_signals": [
+        "hardcoded_secret",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "hardcoded secret",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for hardcoded secret and return a structured finding."
+    },
+    {
+      "id": "KB-0036",
+      "language": "java",
+      "type": "security",
+      "category": "path_traversal",
+      "severity": "high",
+      "cwe": "CWE-22",
+      "owasp": "A01:2021",
+      "title": "Path Traversal",
+      "description": "Synthetic java example for detecting path traversal.",
+      "vulnerable_code": "new FileInputStream(\"/srv/files/\" + filename).read()",
+      "fixed_code": "safe = Path(filename).name\nopen(Path('/srv/files') / safe)",
+      "why_it_matters": "The pattern can create path traversal risk or reduce reliability.",
+      "remediation": "Normalize and constrain paths.",
+      "detection_signals": [
+        "path_traversal",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "path traversal",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for path traversal and return a structured finding."
+    },
+    {
+      "id": "KB-0037",
+      "language": "python",
+      "type": "security",
+      "category": "unsafe_deserialization",
+      "severity": "critical",
+      "cwe": "CWE-502",
+      "owasp": "A08:2021",
+      "title": "Unsafe Deserialization",
+      "description": "Synthetic python example for detecting unsafe deserialization.",
+      "vulnerable_code": "pickle.loads(user_input)",
+      "fixed_code": "data = json.loads(user_input)",
+      "why_it_matters": "The pattern can create unsafe deserialization risk or reduce reliability.",
+      "remediation": "Use safe data formats and validation.",
+      "detection_signals": [
+        "unsafe_deserialization",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "unsafe deserialization",
+        "python",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for unsafe deserialization and return a structured finding."
+    },
+    {
+      "id": "KB-0038",
+      "language": "java",
+      "type": "security",
+      "category": "xss",
+      "severity": "high",
+      "cwe": "CWE-79",
+      "owasp": "A03:2021",
+      "title": "Xss",
+      "description": "Synthetic java example for detecting xss.",
+      "vulnerable_code": "return \"<div>\" + username + \"</div>\"",
+      "fixed_code": "return render_template('user.html', username=username)",
+      "why_it_matters": "The pattern can create xss risk or reduce reliability.",
+      "remediation": "Contextually encode untrusted output.",
+      "detection_signals": [
+        "xss",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "xss",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for xss and return a structured finding."
+    },
+    {
+      "id": "KB-0039",
+      "language": "python",
+      "type": "security",
+      "category": "weak_crypto",
+      "severity": "medium",
+      "cwe": "CWE-327",
+      "owasp": "A02:2021",
+      "title": "Weak Crypto",
+      "description": "Synthetic python example for detecting weak crypto.",
+      "vulnerable_code": "hashlib.md5(password.encode()).hexdigest()",
+      "fixed_code": "hashlib.sha256(password.encode()).hexdigest()",
+      "why_it_matters": "The pattern can create weak crypto risk or reduce reliability.",
+      "remediation": "Use modern cryptographic primitives.",
+      "detection_signals": [
+        "weak_crypto",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "weak crypto",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for weak crypto and return a structured finding."
+    },
+    {
+      "id": "KB-0040",
+      "language": "java",
+      "type": "security",
+      "category": "missing_auth",
+      "severity": "critical",
+      "cwe": "CWE-306",
+      "owasp": "A07:2021",
+      "title": "Missing Auth",
+      "description": "Synthetic java example for detecting missing auth.",
+      "vulnerable_code": "@app.get('/admin')\ndef admin(): return admin_data()",
+      "fixed_code": "@requires_admin\ndef admin(): return admin_data()",
+      "why_it_matters": "The pattern can create missing auth risk or reduce reliability.",
+      "remediation": "Enforce authorization on protected operations.",
+      "detection_signals": [
+        "missing_auth",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing auth",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing auth and return a structured finding."
+    },
+    {
+      "id": "KB-0041",
+      "language": "python",
+      "type": "security",
+      "category": "insecure_random",
+      "severity": "medium",
+      "cwe": "CWE-330",
+      "owasp": "A02:2021",
+      "title": "Insecure Random",
+      "description": "Synthetic python example for detecting insecure random.",
+      "vulnerable_code": "token = random.randint(100000, 999999)",
+      "fixed_code": "token = secrets.randbelow(900000) + 100000",
+      "why_it_matters": "The pattern can create insecure random risk or reduce reliability.",
+      "remediation": "Use cryptographically secure randomness for security tokens.",
+      "detection_signals": [
+        "insecure_random",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "insecure random",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for insecure random and return a structured finding."
+    },
+    {
+      "id": "KB-0042",
+      "language": "java",
+      "type": "quality",
+      "category": "resource_leak",
+      "severity": "medium",
+      "cwe": "CWE-772",
+      "owasp": null,
+      "title": "Resource Leak",
+      "description": "Synthetic java example for detecting resource leak.",
+      "vulnerable_code": "f = new FileInputStream(path); data = f.read()",
+      "fixed_code": "with open(path, encoding='utf-8') as f:\n    data = f.read()",
+      "why_it_matters": "The pattern can create resource leak risk or reduce reliability.",
+      "remediation": "Use context managers or try-with-resources.",
+      "detection_signals": [
+        "resource_leak",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "resource leak",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for resource leak and return a structured finding."
+    },
+    {
+      "id": "KB-0043",
+      "language": "python",
+      "type": "quality",
+      "category": "broad_exception",
+      "severity": "low",
+      "cwe": "CWE-396",
+      "owasp": null,
+      "title": "Broad Exception",
+      "description": "Synthetic python example for detecting broad exception.",
+      "vulnerable_code": "try:\n    work()\nexcept Exception:\n    pass",
+      "fixed_code": "try:\n    work()\nexcept ValueError as exc:\n    logger.warning('%s', exc)",
+      "why_it_matters": "The pattern can create broad exception risk or reduce reliability.",
+      "remediation": "Catch expected exception types and handle them.",
+      "detection_signals": [
+        "broad_exception",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "broad exception",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for broad exception and return a structured finding."
+    },
+    {
+      "id": "KB-0044",
+      "language": "java",
+      "type": "quality",
+      "category": "mutable_default",
+      "severity": "low",
+      "cwe": "CWE-665",
+      "owasp": null,
+      "title": "Mutable Default",
+      "description": "Synthetic java example for detecting mutable default.",
+      "vulnerable_code": "def add_item(item, items=[]): items.append(item)",
+      "fixed_code": "def add_item(item, items=None):\n    items = [] if items is None else items\n    items.append(item)",
+      "why_it_matters": "The pattern can create mutable default risk or reduce reliability.",
+      "remediation": "Avoid shared mutable defaults.",
+      "detection_signals": [
+        "mutable_default",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "mutable default",
+        "java",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for mutable default and return a structured finding."
+    },
+    {
+      "id": "KB-0045",
+      "language": "python",
+      "type": "bug",
+      "category": "null_dereference",
+      "severity": "medium",
+      "cwe": "CWE-476",
+      "owasp": null,
+      "title": "Null Dereference",
+      "description": "Synthetic python example for detecting null dereference.",
+      "vulnerable_code": "user = find_user(uid)\nreturn user.name",
+      "fixed_code": "user = find_user(uid)\nif user is None: raise NotFound()\nreturn user.name",
+      "why_it_matters": "The pattern can create null dereference risk or reduce reliability.",
+      "remediation": "Validate nullable results before dereferencing.",
+      "detection_signals": [
+        "null_dereference",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "null dereference",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for null dereference and return a structured finding."
+    },
+    {
+      "id": "KB-0046",
+      "language": "java",
+      "type": "bug",
+      "category": "race_condition",
+      "severity": "high",
+      "cwe": "CWE-362",
+      "owasp": null,
+      "title": "Race Condition",
+      "description": "Synthetic java example for detecting race condition.",
+      "vulnerable_code": "if not exists(path):\n    create(path)",
+      "fixed_code": "with file_lock(path):\n    if not exists(path): create(path)",
+      "why_it_matters": "The pattern can create race condition risk or reduce reliability.",
+      "remediation": "Use atomic operations or appropriate synchronization.",
+      "detection_signals": [
+        "race_condition",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "race condition",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for race condition and return a structured finding."
+    },
+    {
+      "id": "KB-0047",
+      "language": "python",
+      "type": "performance",
+      "category": "inefficient_loop",
+      "severity": "low",
+      "cwe": "CWE-407",
+      "owasp": null,
+      "title": "Inefficient Loop",
+      "description": "Synthetic python example for detecting inefficient loop.",
+      "vulnerable_code": "for x in items:\n    for y in items:\n        compare(x, y)",
+      "fixed_code": "seen = set(items)\nfor x in seen: compare(x)",
+      "why_it_matters": "The pattern can create inefficient loop risk or reduce reliability.",
+      "remediation": "Avoid unnecessary nested scans and repeated work.",
+      "detection_signals": [
+        "inefficient_loop",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "inefficient loop",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for inefficient loop and return a structured finding."
+    },
+    {
+      "id": "KB-0048",
+      "language": "java",
+      "type": "best_practice",
+      "category": "missing_validation",
+      "severity": "medium",
+      "cwe": "CWE-20",
+      "owasp": "A04:2021",
+      "title": "Missing Validation",
+      "description": "Synthetic java example for detecting missing validation.",
+      "vulnerable_code": "process_email(request.json['email'])",
+      "fixed_code": "email = EmailStr(request.json['email'])\nprocess_email(email)",
+      "why_it_matters": "The pattern can create missing validation risk or reduce reliability.",
+      "remediation": "Validate untrusted input at the boundary.",
+      "detection_signals": [
+        "missing_validation",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing validation",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing validation and return a structured finding."
+    },
+    {
+      "id": "KB-0049",
+      "language": "python",
+      "type": "security",
+      "category": "sql_injection",
+      "severity": "high",
+      "cwe": "CWE-89",
+      "owasp": "A03:2021",
+      "title": "Sql Injection",
+      "description": "Synthetic python example for detecting sql injection.",
+      "vulnerable_code": "query = \"SELECT * FROM users WHERE id = \" + user_id",
+      "fixed_code": "query = \"SELECT * FROM users WHERE id = ?\"\nexecute(query, (user_id,))",
+      "why_it_matters": "The pattern can create sql injection risk or reduce reliability.",
+      "remediation": "Use parameterized queries.",
+      "detection_signals": [
+        "sql_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "sql injection",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for sql injection and return a structured finding."
+    },
+    {
+      "id": "KB-0050",
+      "language": "java",
+      "type": "security",
+      "category": "command_injection",
+      "severity": "critical",
+      "cwe": "CWE-78",
+      "owasp": "A03:2021",
+      "title": "Command Injection",
+      "description": "Synthetic java example for detecting command injection.",
+      "vulnerable_code": "Runtime.getRuntime().exec(\"ping \" + host, shell=True)",
+      "fixed_code": "new ProcessBuilder(\"ping\", host).start()",
+      "why_it_matters": "The pattern can create command injection risk or reduce reliability.",
+      "remediation": "Avoid shell interpolation; pass arguments safely.",
+      "detection_signals": [
+        "command_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "command injection",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for command injection and return a structured finding."
+    },
+    {
+      "id": "KB-0051",
+      "language": "python",
+      "type": "security",
+      "category": "hardcoded_secret",
+      "severity": "high",
+      "cwe": "CWE-798",
+      "owasp": "A07:2021",
+      "title": "Hardcoded Secret",
+      "description": "Synthetic python example for detecting hardcoded secret.",
+      "vulnerable_code": "API_KEY = \"sk-example-secret\"",
+      "fixed_code": "API_KEY = os.environ['API_KEY']",
+      "why_it_matters": "The pattern can create hardcoded secret risk or reduce reliability.",
+      "remediation": "Load secrets from secure environment/configuration.",
+      "detection_signals": [
+        "hardcoded_secret",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "hardcoded secret",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for hardcoded secret and return a structured finding."
+    },
+    {
+      "id": "KB-0052",
+      "language": "java",
+      "type": "security",
+      "category": "path_traversal",
+      "severity": "high",
+      "cwe": "CWE-22",
+      "owasp": "A01:2021",
+      "title": "Path Traversal",
+      "description": "Synthetic java example for detecting path traversal.",
+      "vulnerable_code": "new FileInputStream(\"/srv/files/\" + filename).read()",
+      "fixed_code": "safe = Path(filename).name\nopen(Path('/srv/files') / safe)",
+      "why_it_matters": "The pattern can create path traversal risk or reduce reliability.",
+      "remediation": "Normalize and constrain paths.",
+      "detection_signals": [
+        "path_traversal",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "path traversal",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for path traversal and return a structured finding."
+    },
+    {
+      "id": "KB-0053",
+      "language": "python",
+      "type": "security",
+      "category": "unsafe_deserialization",
+      "severity": "critical",
+      "cwe": "CWE-502",
+      "owasp": "A08:2021",
+      "title": "Unsafe Deserialization",
+      "description": "Synthetic python example for detecting unsafe deserialization.",
+      "vulnerable_code": "pickle.loads(user_input)",
+      "fixed_code": "data = json.loads(user_input)",
+      "why_it_matters": "The pattern can create unsafe deserialization risk or reduce reliability.",
+      "remediation": "Use safe data formats and validation.",
+      "detection_signals": [
+        "unsafe_deserialization",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "unsafe deserialization",
+        "python",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for unsafe deserialization and return a structured finding."
+    },
+    {
+      "id": "KB-0054",
+      "language": "java",
+      "type": "security",
+      "category": "xss",
+      "severity": "high",
+      "cwe": "CWE-79",
+      "owasp": "A03:2021",
+      "title": "Xss",
+      "description": "Synthetic java example for detecting xss.",
+      "vulnerable_code": "return \"<div>\" + username + \"</div>\"",
+      "fixed_code": "return render_template('user.html', username=username)",
+      "why_it_matters": "The pattern can create xss risk or reduce reliability.",
+      "remediation": "Contextually encode untrusted output.",
+      "detection_signals": [
+        "xss",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "xss",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for xss and return a structured finding."
+    },
+    {
+      "id": "KB-0055",
+      "language": "python",
+      "type": "security",
+      "category": "weak_crypto",
+      "severity": "medium",
+      "cwe": "CWE-327",
+      "owasp": "A02:2021",
+      "title": "Weak Crypto",
+      "description": "Synthetic python example for detecting weak crypto.",
+      "vulnerable_code": "hashlib.md5(password.encode()).hexdigest()",
+      "fixed_code": "hashlib.sha256(password.encode()).hexdigest()",
+      "why_it_matters": "The pattern can create weak crypto risk or reduce reliability.",
+      "remediation": "Use modern cryptographic primitives.",
+      "detection_signals": [
+        "weak_crypto",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "weak crypto",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for weak crypto and return a structured finding."
+    },
+    {
+      "id": "KB-0056",
+      "language": "java",
+      "type": "security",
+      "category": "missing_auth",
+      "severity": "critical",
+      "cwe": "CWE-306",
+      "owasp": "A07:2021",
+      "title": "Missing Auth",
+      "description": "Synthetic java example for detecting missing auth.",
+      "vulnerable_code": "@app.get('/admin')\ndef admin(): return admin_data()",
+      "fixed_code": "@requires_admin\ndef admin(): return admin_data()",
+      "why_it_matters": "The pattern can create missing auth risk or reduce reliability.",
+      "remediation": "Enforce authorization on protected operations.",
+      "detection_signals": [
+        "missing_auth",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing auth",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing auth and return a structured finding."
+    },
+    {
+      "id": "KB-0057",
+      "language": "python",
+      "type": "security",
+      "category": "insecure_random",
+      "severity": "medium",
+      "cwe": "CWE-330",
+      "owasp": "A02:2021",
+      "title": "Insecure Random",
+      "description": "Synthetic python example for detecting insecure random.",
+      "vulnerable_code": "token = random.randint(100000, 999999)",
+      "fixed_code": "token = secrets.randbelow(900000) + 100000",
+      "why_it_matters": "The pattern can create insecure random risk or reduce reliability.",
+      "remediation": "Use cryptographically secure randomness for security tokens.",
+      "detection_signals": [
+        "insecure_random",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "insecure random",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for insecure random and return a structured finding."
+    },
+    {
+      "id": "KB-0058",
+      "language": "java",
+      "type": "quality",
+      "category": "resource_leak",
+      "severity": "medium",
+      "cwe": "CWE-772",
+      "owasp": null,
+      "title": "Resource Leak",
+      "description": "Synthetic java example for detecting resource leak.",
+      "vulnerable_code": "f = new FileInputStream(path); data = f.read()",
+      "fixed_code": "with open(path, encoding='utf-8') as f:\n    data = f.read()",
+      "why_it_matters": "The pattern can create resource leak risk or reduce reliability.",
+      "remediation": "Use context managers or try-with-resources.",
+      "detection_signals": [
+        "resource_leak",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "resource leak",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for resource leak and return a structured finding."
+    },
+    {
+      "id": "KB-0059",
+      "language": "python",
+      "type": "quality",
+      "category": "broad_exception",
+      "severity": "low",
+      "cwe": "CWE-396",
+      "owasp": null,
+      "title": "Broad Exception",
+      "description": "Synthetic python example for detecting broad exception.",
+      "vulnerable_code": "try:\n    work()\nexcept Exception:\n    pass",
+      "fixed_code": "try:\n    work()\nexcept ValueError as exc:\n    logger.warning('%s', exc)",
+      "why_it_matters": "The pattern can create broad exception risk or reduce reliability.",
+      "remediation": "Catch expected exception types and handle them.",
+      "detection_signals": [
+        "broad_exception",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "broad exception",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for broad exception and return a structured finding."
+    },
+    {
+      "id": "KB-0060",
+      "language": "java",
+      "type": "quality",
+      "category": "mutable_default",
+      "severity": "low",
+      "cwe": "CWE-665",
+      "owasp": null,
+      "title": "Mutable Default",
+      "description": "Synthetic java example for detecting mutable default.",
+      "vulnerable_code": "def add_item(item, items=[]): items.append(item)",
+      "fixed_code": "def add_item(item, items=None):\n    items = [] if items is None else items\n    items.append(item)",
+      "why_it_matters": "The pattern can create mutable default risk or reduce reliability.",
+      "remediation": "Avoid shared mutable defaults.",
+      "detection_signals": [
+        "mutable_default",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "mutable default",
+        "java",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for mutable default and return a structured finding."
+    },
+    {
+      "id": "KB-0061",
+      "language": "python",
+      "type": "bug",
+      "category": "null_dereference",
+      "severity": "medium",
+      "cwe": "CWE-476",
+      "owasp": null,
+      "title": "Null Dereference",
+      "description": "Synthetic python example for detecting null dereference.",
+      "vulnerable_code": "user = find_user(uid)\nreturn user.name",
+      "fixed_code": "user = find_user(uid)\nif user is None: raise NotFound()\nreturn user.name",
+      "why_it_matters": "The pattern can create null dereference risk or reduce reliability.",
+      "remediation": "Validate nullable results before dereferencing.",
+      "detection_signals": [
+        "null_dereference",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "null dereference",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for null dereference and return a structured finding."
+    },
+    {
+      "id": "KB-0062",
+      "language": "java",
+      "type": "bug",
+      "category": "race_condition",
+      "severity": "high",
+      "cwe": "CWE-362",
+      "owasp": null,
+      "title": "Race Condition",
+      "description": "Synthetic java example for detecting race condition.",
+      "vulnerable_code": "if not exists(path):\n    create(path)",
+      "fixed_code": "with file_lock(path):\n    if not exists(path): create(path)",
+      "why_it_matters": "The pattern can create race condition risk or reduce reliability.",
+      "remediation": "Use atomic operations or appropriate synchronization.",
+      "detection_signals": [
+        "race_condition",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "race condition",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for race condition and return a structured finding."
+    },
+    {
+      "id": "KB-0063",
+      "language": "python",
+      "type": "performance",
+      "category": "inefficient_loop",
+      "severity": "low",
+      "cwe": "CWE-407",
+      "owasp": null,
+      "title": "Inefficient Loop",
+      "description": "Synthetic python example for detecting inefficient loop.",
+      "vulnerable_code": "for x in items:\n    for y in items:\n        compare(x, y)",
+      "fixed_code": "seen = set(items)\nfor x in seen: compare(x)",
+      "why_it_matters": "The pattern can create inefficient loop risk or reduce reliability.",
+      "remediation": "Avoid unnecessary nested scans and repeated work.",
+      "detection_signals": [
+        "inefficient_loop",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "inefficient loop",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for inefficient loop and return a structured finding."
+    },
+    {
+      "id": "KB-0064",
+      "language": "java",
+      "type": "best_practice",
+      "category": "missing_validation",
+      "severity": "medium",
+      "cwe": "CWE-20",
+      "owasp": "A04:2021",
+      "title": "Missing Validation",
+      "description": "Synthetic java example for detecting missing validation.",
+      "vulnerable_code": "process_email(request.json['email'])",
+      "fixed_code": "email = EmailStr(request.json['email'])\nprocess_email(email)",
+      "why_it_matters": "The pattern can create missing validation risk or reduce reliability.",
+      "remediation": "Validate untrusted input at the boundary.",
+      "detection_signals": [
+        "missing_validation",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing validation",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing validation and return a structured finding."
+    },
+    {
+      "id": "KB-0065",
+      "language": "python",
+      "type": "security",
+      "category": "sql_injection",
+      "severity": "high",
+      "cwe": "CWE-89",
+      "owasp": "A03:2021",
+      "title": "Sql Injection",
+      "description": "Synthetic python example for detecting sql injection.",
+      "vulnerable_code": "query = \"SELECT * FROM users WHERE id = \" + user_id",
+      "fixed_code": "query = \"SELECT * FROM users WHERE id = ?\"\nexecute(query, (user_id,))",
+      "why_it_matters": "The pattern can create sql injection risk or reduce reliability.",
+      "remediation": "Use parameterized queries.",
+      "detection_signals": [
+        "sql_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "sql injection",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for sql injection and return a structured finding."
+    },
+    {
+      "id": "KB-0066",
+      "language": "java",
+      "type": "security",
+      "category": "command_injection",
+      "severity": "critical",
+      "cwe": "CWE-78",
+      "owasp": "A03:2021",
+      "title": "Command Injection",
+      "description": "Synthetic java example for detecting command injection.",
+      "vulnerable_code": "Runtime.getRuntime().exec(\"ping \" + host, shell=True)",
+      "fixed_code": "new ProcessBuilder(\"ping\", host).start()",
+      "why_it_matters": "The pattern can create command injection risk or reduce reliability.",
+      "remediation": "Avoid shell interpolation; pass arguments safely.",
+      "detection_signals": [
+        "command_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "command injection",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for command injection and return a structured finding."
+    },
+    {
+      "id": "KB-0067",
+      "language": "python",
+      "type": "security",
+      "category": "hardcoded_secret",
+      "severity": "high",
+      "cwe": "CWE-798",
+      "owasp": "A07:2021",
+      "title": "Hardcoded Secret",
+      "description": "Synthetic python example for detecting hardcoded secret.",
+      "vulnerable_code": "API_KEY = \"sk-example-secret\"",
+      "fixed_code": "API_KEY = os.environ['API_KEY']",
+      "why_it_matters": "The pattern can create hardcoded secret risk or reduce reliability.",
+      "remediation": "Load secrets from secure environment/configuration.",
+      "detection_signals": [
+        "hardcoded_secret",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "hardcoded secret",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for hardcoded secret and return a structured finding."
+    },
+    {
+      "id": "KB-0068",
+      "language": "java",
+      "type": "security",
+      "category": "path_traversal",
+      "severity": "high",
+      "cwe": "CWE-22",
+      "owasp": "A01:2021",
+      "title": "Path Traversal",
+      "description": "Synthetic java example for detecting path traversal.",
+      "vulnerable_code": "new FileInputStream(\"/srv/files/\" + filename).read()",
+      "fixed_code": "safe = Path(filename).name\nopen(Path('/srv/files') / safe)",
+      "why_it_matters": "The pattern can create path traversal risk or reduce reliability.",
+      "remediation": "Normalize and constrain paths.",
+      "detection_signals": [
+        "path_traversal",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "path traversal",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for path traversal and return a structured finding."
+    },
+    {
+      "id": "KB-0069",
+      "language": "python",
+      "type": "security",
+      "category": "unsafe_deserialization",
+      "severity": "critical",
+      "cwe": "CWE-502",
+      "owasp": "A08:2021",
+      "title": "Unsafe Deserialization",
+      "description": "Synthetic python example for detecting unsafe deserialization.",
+      "vulnerable_code": "pickle.loads(user_input)",
+      "fixed_code": "data = json.loads(user_input)",
+      "why_it_matters": "The pattern can create unsafe deserialization risk or reduce reliability.",
+      "remediation": "Use safe data formats and validation.",
+      "detection_signals": [
+        "unsafe_deserialization",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "unsafe deserialization",
+        "python",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for unsafe deserialization and return a structured finding."
+    },
+    {
+      "id": "KB-0070",
+      "language": "java",
+      "type": "security",
+      "category": "xss",
+      "severity": "high",
+      "cwe": "CWE-79",
+      "owasp": "A03:2021",
+      "title": "Xss",
+      "description": "Synthetic java example for detecting xss.",
+      "vulnerable_code": "return \"<div>\" + username + \"</div>\"",
+      "fixed_code": "return render_template('user.html', username=username)",
+      "why_it_matters": "The pattern can create xss risk or reduce reliability.",
+      "remediation": "Contextually encode untrusted output.",
+      "detection_signals": [
+        "xss",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "xss",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for xss and return a structured finding."
+    },
+    {
+      "id": "KB-0071",
+      "language": "python",
+      "type": "security",
+      "category": "weak_crypto",
+      "severity": "medium",
+      "cwe": "CWE-327",
+      "owasp": "A02:2021",
+      "title": "Weak Crypto",
+      "description": "Synthetic python example for detecting weak crypto.",
+      "vulnerable_code": "hashlib.md5(password.encode()).hexdigest()",
+      "fixed_code": "hashlib.sha256(password.encode()).hexdigest()",
+      "why_it_matters": "The pattern can create weak crypto risk or reduce reliability.",
+      "remediation": "Use modern cryptographic primitives.",
+      "detection_signals": [
+        "weak_crypto",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "weak crypto",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for weak crypto and return a structured finding."
+    },
+    {
+      "id": "KB-0072",
+      "language": "java",
+      "type": "security",
+      "category": "missing_auth",
+      "severity": "critical",
+      "cwe": "CWE-306",
+      "owasp": "A07:2021",
+      "title": "Missing Auth",
+      "description": "Synthetic java example for detecting missing auth.",
+      "vulnerable_code": "@app.get('/admin')\ndef admin(): return admin_data()",
+      "fixed_code": "@requires_admin\ndef admin(): return admin_data()",
+      "why_it_matters": "The pattern can create missing auth risk or reduce reliability.",
+      "remediation": "Enforce authorization on protected operations.",
+      "detection_signals": [
+        "missing_auth",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing auth",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing auth and return a structured finding."
+    },
+    {
+      "id": "KB-0073",
+      "language": "python",
+      "type": "security",
+      "category": "insecure_random",
+      "severity": "medium",
+      "cwe": "CWE-330",
+      "owasp": "A02:2021",
+      "title": "Insecure Random",
+      "description": "Synthetic python example for detecting insecure random.",
+      "vulnerable_code": "token = random.randint(100000, 999999)",
+      "fixed_code": "token = secrets.randbelow(900000) + 100000",
+      "why_it_matters": "The pattern can create insecure random risk or reduce reliability.",
+      "remediation": "Use cryptographically secure randomness for security tokens.",
+      "detection_signals": [
+        "insecure_random",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "insecure random",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for insecure random and return a structured finding."
+    },
+    {
+      "id": "KB-0074",
+      "language": "java",
+      "type": "quality",
+      "category": "resource_leak",
+      "severity": "medium",
+      "cwe": "CWE-772",
+      "owasp": null,
+      "title": "Resource Leak",
+      "description": "Synthetic java example for detecting resource leak.",
+      "vulnerable_code": "f = new FileInputStream(path); data = f.read()",
+      "fixed_code": "with open(path, encoding='utf-8') as f:\n    data = f.read()",
+      "why_it_matters": "The pattern can create resource leak risk or reduce reliability.",
+      "remediation": "Use context managers or try-with-resources.",
+      "detection_signals": [
+        "resource_leak",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "resource leak",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for resource leak and return a structured finding."
+    },
+    {
+      "id": "KB-0075",
+      "language": "python",
+      "type": "quality",
+      "category": "broad_exception",
+      "severity": "low",
+      "cwe": "CWE-396",
+      "owasp": null,
+      "title": "Broad Exception",
+      "description": "Synthetic python example for detecting broad exception.",
+      "vulnerable_code": "try:\n    work()\nexcept Exception:\n    pass",
+      "fixed_code": "try:\n    work()\nexcept ValueError as exc:\n    logger.warning('%s', exc)",
+      "why_it_matters": "The pattern can create broad exception risk or reduce reliability.",
+      "remediation": "Catch expected exception types and handle them.",
+      "detection_signals": [
+        "broad_exception",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "broad exception",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for broad exception and return a structured finding."
+    },
+    {
+      "id": "KB-0076",
+      "language": "java",
+      "type": "quality",
+      "category": "mutable_default",
+      "severity": "low",
+      "cwe": "CWE-665",
+      "owasp": null,
+      "title": "Mutable Default",
+      "description": "Synthetic java example for detecting mutable default.",
+      "vulnerable_code": "def add_item(item, items=[]): items.append(item)",
+      "fixed_code": "def add_item(item, items=None):\n    items = [] if items is None else items\n    items.append(item)",
+      "why_it_matters": "The pattern can create mutable default risk or reduce reliability.",
+      "remediation": "Avoid shared mutable defaults.",
+      "detection_signals": [
+        "mutable_default",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "mutable default",
+        "java",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for mutable default and return a structured finding."
+    },
+    {
+      "id": "KB-0077",
+      "language": "python",
+      "type": "bug",
+      "category": "null_dereference",
+      "severity": "medium",
+      "cwe": "CWE-476",
+      "owasp": null,
+      "title": "Null Dereference",
+      "description": "Synthetic python example for detecting null dereference.",
+      "vulnerable_code": "user = find_user(uid)\nreturn user.name",
+      "fixed_code": "user = find_user(uid)\nif user is None: raise NotFound()\nreturn user.name",
+      "why_it_matters": "The pattern can create null dereference risk or reduce reliability.",
+      "remediation": "Validate nullable results before dereferencing.",
+      "detection_signals": [
+        "null_dereference",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "null dereference",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for null dereference and return a structured finding."
+    },
+    {
+      "id": "KB-0078",
+      "language": "java",
+      "type": "bug",
+      "category": "race_condition",
+      "severity": "high",
+      "cwe": "CWE-362",
+      "owasp": null,
+      "title": "Race Condition",
+      "description": "Synthetic java example for detecting race condition.",
+      "vulnerable_code": "if not exists(path):\n    create(path)",
+      "fixed_code": "with file_lock(path):\n    if not exists(path): create(path)",
+      "why_it_matters": "The pattern can create race condition risk or reduce reliability.",
+      "remediation": "Use atomic operations or appropriate synchronization.",
+      "detection_signals": [
+        "race_condition",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "race condition",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for race condition and return a structured finding."
+    },
+    {
+      "id": "KB-0079",
+      "language": "python",
+      "type": "performance",
+      "category": "inefficient_loop",
+      "severity": "low",
+      "cwe": "CWE-407",
+      "owasp": null,
+      "title": "Inefficient Loop",
+      "description": "Synthetic python example for detecting inefficient loop.",
+      "vulnerable_code": "for x in items:\n    for y in items:\n        compare(x, y)",
+      "fixed_code": "seen = set(items)\nfor x in seen: compare(x)",
+      "why_it_matters": "The pattern can create inefficient loop risk or reduce reliability.",
+      "remediation": "Avoid unnecessary nested scans and repeated work.",
+      "detection_signals": [
+        "inefficient_loop",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "inefficient loop",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for inefficient loop and return a structured finding."
+    },
+    {
+      "id": "KB-0080",
+      "language": "java",
+      "type": "best_practice",
+      "category": "missing_validation",
+      "severity": "medium",
+      "cwe": "CWE-20",
+      "owasp": "A04:2021",
+      "title": "Missing Validation",
+      "description": "Synthetic java example for detecting missing validation.",
+      "vulnerable_code": "process_email(request.json['email'])",
+      "fixed_code": "email = EmailStr(request.json['email'])\nprocess_email(email)",
+      "why_it_matters": "The pattern can create missing validation risk or reduce reliability.",
+      "remediation": "Validate untrusted input at the boundary.",
+      "detection_signals": [
+        "missing_validation",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing validation",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing validation and return a structured finding."
+    },
+    {
+      "id": "KB-0081",
+      "language": "python",
+      "type": "security",
+      "category": "sql_injection",
+      "severity": "high",
+      "cwe": "CWE-89",
+      "owasp": "A03:2021",
+      "title": "Sql Injection",
+      "description": "Synthetic python example for detecting sql injection.",
+      "vulnerable_code": "query = \"SELECT * FROM users WHERE id = \" + user_id",
+      "fixed_code": "query = \"SELECT * FROM users WHERE id = ?\"\nexecute(query, (user_id,))",
+      "why_it_matters": "The pattern can create sql injection risk or reduce reliability.",
+      "remediation": "Use parameterized queries.",
+      "detection_signals": [
+        "sql_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "sql injection",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for sql injection and return a structured finding."
+    },
+    {
+      "id": "KB-0082",
+      "language": "java",
+      "type": "security",
+      "category": "command_injection",
+      "severity": "critical",
+      "cwe": "CWE-78",
+      "owasp": "A03:2021",
+      "title": "Command Injection",
+      "description": "Synthetic java example for detecting command injection.",
+      "vulnerable_code": "Runtime.getRuntime().exec(\"ping \" + host, shell=True)",
+      "fixed_code": "new ProcessBuilder(\"ping\", host).start()",
+      "why_it_matters": "The pattern can create command injection risk or reduce reliability.",
+      "remediation": "Avoid shell interpolation; pass arguments safely.",
+      "detection_signals": [
+        "command_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "command injection",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for command injection and return a structured finding."
+    },
+    {
+      "id": "KB-0083",
+      "language": "python",
+      "type": "security",
+      "category": "hardcoded_secret",
+      "severity": "high",
+      "cwe": "CWE-798",
+      "owasp": "A07:2021",
+      "title": "Hardcoded Secret",
+      "description": "Synthetic python example for detecting hardcoded secret.",
+      "vulnerable_code": "API_KEY = \"sk-example-secret\"",
+      "fixed_code": "API_KEY = os.environ['API_KEY']",
+      "why_it_matters": "The pattern can create hardcoded secret risk or reduce reliability.",
+      "remediation": "Load secrets from secure environment/configuration.",
+      "detection_signals": [
+        "hardcoded_secret",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "hardcoded secret",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for hardcoded secret and return a structured finding."
+    },
+    {
+      "id": "KB-0084",
+      "language": "java",
+      "type": "security",
+      "category": "path_traversal",
+      "severity": "high",
+      "cwe": "CWE-22",
+      "owasp": "A01:2021",
+      "title": "Path Traversal",
+      "description": "Synthetic java example for detecting path traversal.",
+      "vulnerable_code": "new FileInputStream(\"/srv/files/\" + filename).read()",
+      "fixed_code": "safe = Path(filename).name\nopen(Path('/srv/files') / safe)",
+      "why_it_matters": "The pattern can create path traversal risk or reduce reliability.",
+      "remediation": "Normalize and constrain paths.",
+      "detection_signals": [
+        "path_traversal",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "path traversal",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for path traversal and return a structured finding."
+    },
+    {
+      "id": "KB-0085",
+      "language": "python",
+      "type": "security",
+      "category": "unsafe_deserialization",
+      "severity": "critical",
+      "cwe": "CWE-502",
+      "owasp": "A08:2021",
+      "title": "Unsafe Deserialization",
+      "description": "Synthetic python example for detecting unsafe deserialization.",
+      "vulnerable_code": "pickle.loads(user_input)",
+      "fixed_code": "data = json.loads(user_input)",
+      "why_it_matters": "The pattern can create unsafe deserialization risk or reduce reliability.",
+      "remediation": "Use safe data formats and validation.",
+      "detection_signals": [
+        "unsafe_deserialization",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "unsafe deserialization",
+        "python",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for unsafe deserialization and return a structured finding."
+    },
+    {
+      "id": "KB-0086",
+      "language": "java",
+      "type": "security",
+      "category": "xss",
+      "severity": "high",
+      "cwe": "CWE-79",
+      "owasp": "A03:2021",
+      "title": "Xss",
+      "description": "Synthetic java example for detecting xss.",
+      "vulnerable_code": "return \"<div>\" + username + \"</div>\"",
+      "fixed_code": "return render_template('user.html', username=username)",
+      "why_it_matters": "The pattern can create xss risk or reduce reliability.",
+      "remediation": "Contextually encode untrusted output.",
+      "detection_signals": [
+        "xss",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "xss",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for xss and return a structured finding."
+    },
+    {
+      "id": "KB-0087",
+      "language": "python",
+      "type": "security",
+      "category": "weak_crypto",
+      "severity": "medium",
+      "cwe": "CWE-327",
+      "owasp": "A02:2021",
+      "title": "Weak Crypto",
+      "description": "Synthetic python example for detecting weak crypto.",
+      "vulnerable_code": "hashlib.md5(password.encode()).hexdigest()",
+      "fixed_code": "hashlib.sha256(password.encode()).hexdigest()",
+      "why_it_matters": "The pattern can create weak crypto risk or reduce reliability.",
+      "remediation": "Use modern cryptographic primitives.",
+      "detection_signals": [
+        "weak_crypto",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "weak crypto",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for weak crypto and return a structured finding."
+    },
+    {
+      "id": "KB-0088",
+      "language": "java",
+      "type": "security",
+      "category": "missing_auth",
+      "severity": "critical",
+      "cwe": "CWE-306",
+      "owasp": "A07:2021",
+      "title": "Missing Auth",
+      "description": "Synthetic java example for detecting missing auth.",
+      "vulnerable_code": "@app.get('/admin')\ndef admin(): return admin_data()",
+      "fixed_code": "@requires_admin\ndef admin(): return admin_data()",
+      "why_it_matters": "The pattern can create missing auth risk or reduce reliability.",
+      "remediation": "Enforce authorization on protected operations.",
+      "detection_signals": [
+        "missing_auth",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing auth",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing auth and return a structured finding."
+    },
+    {
+      "id": "KB-0089",
+      "language": "python",
+      "type": "security",
+      "category": "insecure_random",
+      "severity": "medium",
+      "cwe": "CWE-330",
+      "owasp": "A02:2021",
+      "title": "Insecure Random",
+      "description": "Synthetic python example for detecting insecure random.",
+      "vulnerable_code": "token = random.randint(100000, 999999)",
+      "fixed_code": "token = secrets.randbelow(900000) + 100000",
+      "why_it_matters": "The pattern can create insecure random risk or reduce reliability.",
+      "remediation": "Use cryptographically secure randomness for security tokens.",
+      "detection_signals": [
+        "insecure_random",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "insecure random",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for insecure random and return a structured finding."
+    },
+    {
+      "id": "KB-0090",
+      "language": "java",
+      "type": "quality",
+      "category": "resource_leak",
+      "severity": "medium",
+      "cwe": "CWE-772",
+      "owasp": null,
+      "title": "Resource Leak",
+      "description": "Synthetic java example for detecting resource leak.",
+      "vulnerable_code": "f = new FileInputStream(path); data = f.read()",
+      "fixed_code": "with open(path, encoding='utf-8') as f:\n    data = f.read()",
+      "why_it_matters": "The pattern can create resource leak risk or reduce reliability.",
+      "remediation": "Use context managers or try-with-resources.",
+      "detection_signals": [
+        "resource_leak",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "resource leak",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for resource leak and return a structured finding."
+    },
+    {
+      "id": "KB-0091",
+      "language": "python",
+      "type": "quality",
+      "category": "broad_exception",
+      "severity": "low",
+      "cwe": "CWE-396",
+      "owasp": null,
+      "title": "Broad Exception",
+      "description": "Synthetic python example for detecting broad exception.",
+      "vulnerable_code": "try:\n    work()\nexcept Exception:\n    pass",
+      "fixed_code": "try:\n    work()\nexcept ValueError as exc:\n    logger.warning('%s', exc)",
+      "why_it_matters": "The pattern can create broad exception risk or reduce reliability.",
+      "remediation": "Catch expected exception types and handle them.",
+      "detection_signals": [
+        "broad_exception",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "broad exception",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for broad exception and return a structured finding."
+    },
+    {
+      "id": "KB-0092",
+      "language": "java",
+      "type": "quality",
+      "category": "mutable_default",
+      "severity": "low",
+      "cwe": "CWE-665",
+      "owasp": null,
+      "title": "Mutable Default",
+      "description": "Synthetic java example for detecting mutable default.",
+      "vulnerable_code": "def add_item(item, items=[]): items.append(item)",
+      "fixed_code": "def add_item(item, items=None):\n    items = [] if items is None else items\n    items.append(item)",
+      "why_it_matters": "The pattern can create mutable default risk or reduce reliability.",
+      "remediation": "Avoid shared mutable defaults.",
+      "detection_signals": [
+        "mutable_default",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "mutable default",
+        "java",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for mutable default and return a structured finding."
+    },
+    {
+      "id": "KB-0093",
+      "language": "python",
+      "type": "bug",
+      "category": "null_dereference",
+      "severity": "medium",
+      "cwe": "CWE-476",
+      "owasp": null,
+      "title": "Null Dereference",
+      "description": "Synthetic python example for detecting null dereference.",
+      "vulnerable_code": "user = find_user(uid)\nreturn user.name",
+      "fixed_code": "user = find_user(uid)\nif user is None: raise NotFound()\nreturn user.name",
+      "why_it_matters": "The pattern can create null dereference risk or reduce reliability.",
+      "remediation": "Validate nullable results before dereferencing.",
+      "detection_signals": [
+        "null_dereference",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "null dereference",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for null dereference and return a structured finding."
+    },
+    {
+      "id": "KB-0094",
+      "language": "java",
+      "type": "bug",
+      "category": "race_condition",
+      "severity": "high",
+      "cwe": "CWE-362",
+      "owasp": null,
+      "title": "Race Condition",
+      "description": "Synthetic java example for detecting race condition.",
+      "vulnerable_code": "if not exists(path):\n    create(path)",
+      "fixed_code": "with file_lock(path):\n    if not exists(path): create(path)",
+      "why_it_matters": "The pattern can create race condition risk or reduce reliability.",
+      "remediation": "Use atomic operations or appropriate synchronization.",
+      "detection_signals": [
+        "race_condition",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "race condition",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for race condition and return a structured finding."
+    },
+    {
+      "id": "KB-0095",
+      "language": "python",
+      "type": "performance",
+      "category": "inefficient_loop",
+      "severity": "low",
+      "cwe": "CWE-407",
+      "owasp": null,
+      "title": "Inefficient Loop",
+      "description": "Synthetic python example for detecting inefficient loop.",
+      "vulnerable_code": "for x in items:\n    for y in items:\n        compare(x, y)",
+      "fixed_code": "seen = set(items)\nfor x in seen: compare(x)",
+      "why_it_matters": "The pattern can create inefficient loop risk or reduce reliability.",
+      "remediation": "Avoid unnecessary nested scans and repeated work.",
+      "detection_signals": [
+        "inefficient_loop",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "inefficient loop",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for inefficient loop and return a structured finding."
+    },
+    {
+      "id": "KB-0096",
+      "language": "java",
+      "type": "best_practice",
+      "category": "missing_validation",
+      "severity": "medium",
+      "cwe": "CWE-20",
+      "owasp": "A04:2021",
+      "title": "Missing Validation",
+      "description": "Synthetic java example for detecting missing validation.",
+      "vulnerable_code": "process_email(request.json['email'])",
+      "fixed_code": "email = EmailStr(request.json['email'])\nprocess_email(email)",
+      "why_it_matters": "The pattern can create missing validation risk or reduce reliability.",
+      "remediation": "Validate untrusted input at the boundary.",
+      "detection_signals": [
+        "missing_validation",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing validation",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing validation and return a structured finding."
+    },
+    {
+      "id": "KB-0097",
+      "language": "python",
+      "type": "security",
+      "category": "sql_injection",
+      "severity": "high",
+      "cwe": "CWE-89",
+      "owasp": "A03:2021",
+      "title": "Sql Injection",
+      "description": "Synthetic python example for detecting sql injection.",
+      "vulnerable_code": "query = \"SELECT * FROM users WHERE id = \" + user_id",
+      "fixed_code": "query = \"SELECT * FROM users WHERE id = ?\"\nexecute(query, (user_id,))",
+      "why_it_matters": "The pattern can create sql injection risk or reduce reliability.",
+      "remediation": "Use parameterized queries.",
+      "detection_signals": [
+        "sql_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "sql injection",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for sql injection and return a structured finding."
+    },
+    {
+      "id": "KB-0098",
+      "language": "java",
+      "type": "security",
+      "category": "command_injection",
+      "severity": "critical",
+      "cwe": "CWE-78",
+      "owasp": "A03:2021",
+      "title": "Command Injection",
+      "description": "Synthetic java example for detecting command injection.",
+      "vulnerable_code": "Runtime.getRuntime().exec(\"ping \" + host, shell=True)",
+      "fixed_code": "new ProcessBuilder(\"ping\", host).start()",
+      "why_it_matters": "The pattern can create command injection risk or reduce reliability.",
+      "remediation": "Avoid shell interpolation; pass arguments safely.",
+      "detection_signals": [
+        "command_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "command injection",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for command injection and return a structured finding."
+    },
+    {
+      "id": "KB-0099",
+      "language": "python",
+      "type": "security",
+      "category": "hardcoded_secret",
+      "severity": "high",
+      "cwe": "CWE-798",
+      "owasp": "A07:2021",
+      "title": "Hardcoded Secret",
+      "description": "Synthetic python example for detecting hardcoded secret.",
+      "vulnerable_code": "API_KEY = \"sk-example-secret\"",
+      "fixed_code": "API_KEY = os.environ['API_KEY']",
+      "why_it_matters": "The pattern can create hardcoded secret risk or reduce reliability.",
+      "remediation": "Load secrets from secure environment/configuration.",
+      "detection_signals": [
+        "hardcoded_secret",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "hardcoded secret",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for hardcoded secret and return a structured finding."
+    },
+    {
+      "id": "KB-0100",
+      "language": "java",
+      "type": "security",
+      "category": "path_traversal",
+      "severity": "high",
+      "cwe": "CWE-22",
+      "owasp": "A01:2021",
+      "title": "Path Traversal",
+      "description": "Synthetic java example for detecting path traversal.",
+      "vulnerable_code": "new FileInputStream(\"/srv/files/\" + filename).read()",
+      "fixed_code": "safe = Path(filename).name\nopen(Path('/srv/files') / safe)",
+      "why_it_matters": "The pattern can create path traversal risk or reduce reliability.",
+      "remediation": "Normalize and constrain paths.",
+      "detection_signals": [
+        "path_traversal",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "path traversal",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for path traversal and return a structured finding."
+    },
+    {
+      "id": "KB-0101",
+      "language": "python",
+      "type": "security",
+      "category": "unsafe_deserialization",
+      "severity": "critical",
+      "cwe": "CWE-502",
+      "owasp": "A08:2021",
+      "title": "Unsafe Deserialization",
+      "description": "Synthetic python example for detecting unsafe deserialization.",
+      "vulnerable_code": "pickle.loads(user_input)",
+      "fixed_code": "data = json.loads(user_input)",
+      "why_it_matters": "The pattern can create unsafe deserialization risk or reduce reliability.",
+      "remediation": "Use safe data formats and validation.",
+      "detection_signals": [
+        "unsafe_deserialization",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "unsafe deserialization",
+        "python",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for unsafe deserialization and return a structured finding."
+    },
+    {
+      "id": "KB-0102",
+      "language": "java",
+      "type": "security",
+      "category": "xss",
+      "severity": "high",
+      "cwe": "CWE-79",
+      "owasp": "A03:2021",
+      "title": "Xss",
+      "description": "Synthetic java example for detecting xss.",
+      "vulnerable_code": "return \"<div>\" + username + \"</div>\"",
+      "fixed_code": "return render_template('user.html', username=username)",
+      "why_it_matters": "The pattern can create xss risk or reduce reliability.",
+      "remediation": "Contextually encode untrusted output.",
+      "detection_signals": [
+        "xss",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "xss",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for xss and return a structured finding."
+    },
+    {
+      "id": "KB-0103",
+      "language": "python",
+      "type": "security",
+      "category": "weak_crypto",
+      "severity": "medium",
+      "cwe": "CWE-327",
+      "owasp": "A02:2021",
+      "title": "Weak Crypto",
+      "description": "Synthetic python example for detecting weak crypto.",
+      "vulnerable_code": "hashlib.md5(password.encode()).hexdigest()",
+      "fixed_code": "hashlib.sha256(password.encode()).hexdigest()",
+      "why_it_matters": "The pattern can create weak crypto risk or reduce reliability.",
+      "remediation": "Use modern cryptographic primitives.",
+      "detection_signals": [
+        "weak_crypto",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "weak crypto",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for weak crypto and return a structured finding."
+    },
+    {
+      "id": "KB-0104",
+      "language": "java",
+      "type": "security",
+      "category": "missing_auth",
+      "severity": "critical",
+      "cwe": "CWE-306",
+      "owasp": "A07:2021",
+      "title": "Missing Auth",
+      "description": "Synthetic java example for detecting missing auth.",
+      "vulnerable_code": "@app.get('/admin')\ndef admin(): return admin_data()",
+      "fixed_code": "@requires_admin\ndef admin(): return admin_data()",
+      "why_it_matters": "The pattern can create missing auth risk or reduce reliability.",
+      "remediation": "Enforce authorization on protected operations.",
+      "detection_signals": [
+        "missing_auth",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing auth",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing auth and return a structured finding."
+    },
+    {
+      "id": "KB-0105",
+      "language": "python",
+      "type": "security",
+      "category": "insecure_random",
+      "severity": "medium",
+      "cwe": "CWE-330",
+      "owasp": "A02:2021",
+      "title": "Insecure Random",
+      "description": "Synthetic python example for detecting insecure random.",
+      "vulnerable_code": "token = random.randint(100000, 999999)",
+      "fixed_code": "token = secrets.randbelow(900000) + 100000",
+      "why_it_matters": "The pattern can create insecure random risk or reduce reliability.",
+      "remediation": "Use cryptographically secure randomness for security tokens.",
+      "detection_signals": [
+        "insecure_random",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "insecure random",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for insecure random and return a structured finding."
+    },
+    {
+      "id": "KB-0106",
+      "language": "java",
+      "type": "quality",
+      "category": "resource_leak",
+      "severity": "medium",
+      "cwe": "CWE-772",
+      "owasp": null,
+      "title": "Resource Leak",
+      "description": "Synthetic java example for detecting resource leak.",
+      "vulnerable_code": "f = new FileInputStream(path); data = f.read()",
+      "fixed_code": "with open(path, encoding='utf-8') as f:\n    data = f.read()",
+      "why_it_matters": "The pattern can create resource leak risk or reduce reliability.",
+      "remediation": "Use context managers or try-with-resources.",
+      "detection_signals": [
+        "resource_leak",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "resource leak",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for resource leak and return a structured finding."
+    },
+    {
+      "id": "KB-0107",
+      "language": "python",
+      "type": "quality",
+      "category": "broad_exception",
+      "severity": "low",
+      "cwe": "CWE-396",
+      "owasp": null,
+      "title": "Broad Exception",
+      "description": "Synthetic python example for detecting broad exception.",
+      "vulnerable_code": "try:\n    work()\nexcept Exception:\n    pass",
+      "fixed_code": "try:\n    work()\nexcept ValueError as exc:\n    logger.warning('%s', exc)",
+      "why_it_matters": "The pattern can create broad exception risk or reduce reliability.",
+      "remediation": "Catch expected exception types and handle them.",
+      "detection_signals": [
+        "broad_exception",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "broad exception",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for broad exception and return a structured finding."
+    },
+    {
+      "id": "KB-0108",
+      "language": "java",
+      "type": "quality",
+      "category": "mutable_default",
+      "severity": "low",
+      "cwe": "CWE-665",
+      "owasp": null,
+      "title": "Mutable Default",
+      "description": "Synthetic java example for detecting mutable default.",
+      "vulnerable_code": "def add_item(item, items=[]): items.append(item)",
+      "fixed_code": "def add_item(item, items=None):\n    items = [] if items is None else items\n    items.append(item)",
+      "why_it_matters": "The pattern can create mutable default risk or reduce reliability.",
+      "remediation": "Avoid shared mutable defaults.",
+      "detection_signals": [
+        "mutable_default",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "mutable default",
+        "java",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for mutable default and return a structured finding."
+    },
+    {
+      "id": "KB-0109",
+      "language": "python",
+      "type": "bug",
+      "category": "null_dereference",
+      "severity": "medium",
+      "cwe": "CWE-476",
+      "owasp": null,
+      "title": "Null Dereference",
+      "description": "Synthetic python example for detecting null dereference.",
+      "vulnerable_code": "user = find_user(uid)\nreturn user.name",
+      "fixed_code": "user = find_user(uid)\nif user is None: raise NotFound()\nreturn user.name",
+      "why_it_matters": "The pattern can create null dereference risk or reduce reliability.",
+      "remediation": "Validate nullable results before dereferencing.",
+      "detection_signals": [
+        "null_dereference",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "null dereference",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for null dereference and return a structured finding."
+    },
+    {
+      "id": "KB-0110",
+      "language": "java",
+      "type": "bug",
+      "category": "race_condition",
+      "severity": "high",
+      "cwe": "CWE-362",
+      "owasp": null,
+      "title": "Race Condition",
+      "description": "Synthetic java example for detecting race condition.",
+      "vulnerable_code": "if not exists(path):\n    create(path)",
+      "fixed_code": "with file_lock(path):\n    if not exists(path): create(path)",
+      "why_it_matters": "The pattern can create race condition risk or reduce reliability.",
+      "remediation": "Use atomic operations or appropriate synchronization.",
+      "detection_signals": [
+        "race_condition",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "race condition",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for race condition and return a structured finding."
+    },
+    {
+      "id": "KB-0111",
+      "language": "python",
+      "type": "performance",
+      "category": "inefficient_loop",
+      "severity": "low",
+      "cwe": "CWE-407",
+      "owasp": null,
+      "title": "Inefficient Loop",
+      "description": "Synthetic python example for detecting inefficient loop.",
+      "vulnerable_code": "for x in items:\n    for y in items:\n        compare(x, y)",
+      "fixed_code": "seen = set(items)\nfor x in seen: compare(x)",
+      "why_it_matters": "The pattern can create inefficient loop risk or reduce reliability.",
+      "remediation": "Avoid unnecessary nested scans and repeated work.",
+      "detection_signals": [
+        "inefficient_loop",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "inefficient loop",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for inefficient loop and return a structured finding."
+    },
+    {
+      "id": "KB-0112",
+      "language": "java",
+      "type": "best_practice",
+      "category": "missing_validation",
+      "severity": "medium",
+      "cwe": "CWE-20",
+      "owasp": "A04:2021",
+      "title": "Missing Validation",
+      "description": "Synthetic java example for detecting missing validation.",
+      "vulnerable_code": "process_email(request.json['email'])",
+      "fixed_code": "email = EmailStr(request.json['email'])\nprocess_email(email)",
+      "why_it_matters": "The pattern can create missing validation risk or reduce reliability.",
+      "remediation": "Validate untrusted input at the boundary.",
+      "detection_signals": [
+        "missing_validation",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing validation",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing validation and return a structured finding."
+    },
+    {
+      "id": "KB-0113",
+      "language": "python",
+      "type": "security",
+      "category": "sql_injection",
+      "severity": "high",
+      "cwe": "CWE-89",
+      "owasp": "A03:2021",
+      "title": "Sql Injection",
+      "description": "Synthetic python example for detecting sql injection.",
+      "vulnerable_code": "query = \"SELECT * FROM users WHERE id = \" + user_id",
+      "fixed_code": "query = \"SELECT * FROM users WHERE id = ?\"\nexecute(query, (user_id,))",
+      "why_it_matters": "The pattern can create sql injection risk or reduce reliability.",
+      "remediation": "Use parameterized queries.",
+      "detection_signals": [
+        "sql_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "sql injection",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for sql injection and return a structured finding."
+    },
+    {
+      "id": "KB-0114",
+      "language": "java",
+      "type": "security",
+      "category": "command_injection",
+      "severity": "critical",
+      "cwe": "CWE-78",
+      "owasp": "A03:2021",
+      "title": "Command Injection",
+      "description": "Synthetic java example for detecting command injection.",
+      "vulnerable_code": "Runtime.getRuntime().exec(\"ping \" + host, shell=True)",
+      "fixed_code": "new ProcessBuilder(\"ping\", host).start()",
+      "why_it_matters": "The pattern can create command injection risk or reduce reliability.",
+      "remediation": "Avoid shell interpolation; pass arguments safely.",
+      "detection_signals": [
+        "command_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "command injection",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for command injection and return a structured finding."
+    },
+    {
+      "id": "KB-0115",
+      "language": "python",
+      "type": "security",
+      "category": "hardcoded_secret",
+      "severity": "high",
+      "cwe": "CWE-798",
+      "owasp": "A07:2021",
+      "title": "Hardcoded Secret",
+      "description": "Synthetic python example for detecting hardcoded secret.",
+      "vulnerable_code": "API_KEY = \"sk-example-secret\"",
+      "fixed_code": "API_KEY = os.environ['API_KEY']",
+      "why_it_matters": "The pattern can create hardcoded secret risk or reduce reliability.",
+      "remediation": "Load secrets from secure environment/configuration.",
+      "detection_signals": [
+        "hardcoded_secret",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "hardcoded secret",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for hardcoded secret and return a structured finding."
+    },
+    {
+      "id": "KB-0116",
+      "language": "java",
+      "type": "security",
+      "category": "path_traversal",
+      "severity": "high",
+      "cwe": "CWE-22",
+      "owasp": "A01:2021",
+      "title": "Path Traversal",
+      "description": "Synthetic java example for detecting path traversal.",
+      "vulnerable_code": "new FileInputStream(\"/srv/files/\" + filename).read()",
+      "fixed_code": "safe = Path(filename).name\nopen(Path('/srv/files') / safe)",
+      "why_it_matters": "The pattern can create path traversal risk or reduce reliability.",
+      "remediation": "Normalize and constrain paths.",
+      "detection_signals": [
+        "path_traversal",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "path traversal",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for path traversal and return a structured finding."
+    },
+    {
+      "id": "KB-0117",
+      "language": "python",
+      "type": "security",
+      "category": "unsafe_deserialization",
+      "severity": "critical",
+      "cwe": "CWE-502",
+      "owasp": "A08:2021",
+      "title": "Unsafe Deserialization",
+      "description": "Synthetic python example for detecting unsafe deserialization.",
+      "vulnerable_code": "pickle.loads(user_input)",
+      "fixed_code": "data = json.loads(user_input)",
+      "why_it_matters": "The pattern can create unsafe deserialization risk or reduce reliability.",
+      "remediation": "Use safe data formats and validation.",
+      "detection_signals": [
+        "unsafe_deserialization",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "unsafe deserialization",
+        "python",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for unsafe deserialization and return a structured finding."
+    },
+    {
+      "id": "KB-0118",
+      "language": "java",
+      "type": "security",
+      "category": "xss",
+      "severity": "high",
+      "cwe": "CWE-79",
+      "owasp": "A03:2021",
+      "title": "Xss",
+      "description": "Synthetic java example for detecting xss.",
+      "vulnerable_code": "return \"<div>\" + username + \"</div>\"",
+      "fixed_code": "return render_template('user.html', username=username)",
+      "why_it_matters": "The pattern can create xss risk or reduce reliability.",
+      "remediation": "Contextually encode untrusted output.",
+      "detection_signals": [
+        "xss",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "xss",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for xss and return a structured finding."
+    },
+    {
+      "id": "KB-0119",
+      "language": "python",
+      "type": "security",
+      "category": "weak_crypto",
+      "severity": "medium",
+      "cwe": "CWE-327",
+      "owasp": "A02:2021",
+      "title": "Weak Crypto",
+      "description": "Synthetic python example for detecting weak crypto.",
+      "vulnerable_code": "hashlib.md5(password.encode()).hexdigest()",
+      "fixed_code": "hashlib.sha256(password.encode()).hexdigest()",
+      "why_it_matters": "The pattern can create weak crypto risk or reduce reliability.",
+      "remediation": "Use modern cryptographic primitives.",
+      "detection_signals": [
+        "weak_crypto",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "weak crypto",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for weak crypto and return a structured finding."
+    },
+    {
+      "id": "KB-0120",
+      "language": "java",
+      "type": "security",
+      "category": "missing_auth",
+      "severity": "critical",
+      "cwe": "CWE-306",
+      "owasp": "A07:2021",
+      "title": "Missing Auth",
+      "description": "Synthetic java example for detecting missing auth.",
+      "vulnerable_code": "@app.get('/admin')\ndef admin(): return admin_data()",
+      "fixed_code": "@requires_admin\ndef admin(): return admin_data()",
+      "why_it_matters": "The pattern can create missing auth risk or reduce reliability.",
+      "remediation": "Enforce authorization on protected operations.",
+      "detection_signals": [
+        "missing_auth",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing auth",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing auth and return a structured finding."
+    },
+    {
+      "id": "KB-0121",
+      "language": "python",
+      "type": "security",
+      "category": "insecure_random",
+      "severity": "medium",
+      "cwe": "CWE-330",
+      "owasp": "A02:2021",
+      "title": "Insecure Random",
+      "description": "Synthetic python example for detecting insecure random.",
+      "vulnerable_code": "token = random.randint(100000, 999999)",
+      "fixed_code": "token = secrets.randbelow(900000) + 100000",
+      "why_it_matters": "The pattern can create insecure random risk or reduce reliability.",
+      "remediation": "Use cryptographically secure randomness for security tokens.",
+      "detection_signals": [
+        "insecure_random",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "insecure random",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for insecure random and return a structured finding."
+    },
+    {
+      "id": "KB-0122",
+      "language": "java",
+      "type": "quality",
+      "category": "resource_leak",
+      "severity": "medium",
+      "cwe": "CWE-772",
+      "owasp": null,
+      "title": "Resource Leak",
+      "description": "Synthetic java example for detecting resource leak.",
+      "vulnerable_code": "f = new FileInputStream(path); data = f.read()",
+      "fixed_code": "with open(path, encoding='utf-8') as f:\n    data = f.read()",
+      "why_it_matters": "The pattern can create resource leak risk or reduce reliability.",
+      "remediation": "Use context managers or try-with-resources.",
+      "detection_signals": [
+        "resource_leak",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "resource leak",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for resource leak and return a structured finding."
+    },
+    {
+      "id": "KB-0123",
+      "language": "python",
+      "type": "quality",
+      "category": "broad_exception",
+      "severity": "low",
+      "cwe": "CWE-396",
+      "owasp": null,
+      "title": "Broad Exception",
+      "description": "Synthetic python example for detecting broad exception.",
+      "vulnerable_code": "try:\n    work()\nexcept Exception:\n    pass",
+      "fixed_code": "try:\n    work()\nexcept ValueError as exc:\n    logger.warning('%s', exc)",
+      "why_it_matters": "The pattern can create broad exception risk or reduce reliability.",
+      "remediation": "Catch expected exception types and handle them.",
+      "detection_signals": [
+        "broad_exception",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "broad exception",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for broad exception and return a structured finding."
+    },
+    {
+      "id": "KB-0124",
+      "language": "java",
+      "type": "quality",
+      "category": "mutable_default",
+      "severity": "low",
+      "cwe": "CWE-665",
+      "owasp": null,
+      "title": "Mutable Default",
+      "description": "Synthetic java example for detecting mutable default.",
+      "vulnerable_code": "def add_item(item, items=[]): items.append(item)",
+      "fixed_code": "def add_item(item, items=None):\n    items = [] if items is None else items\n    items.append(item)",
+      "why_it_matters": "The pattern can create mutable default risk or reduce reliability.",
+      "remediation": "Avoid shared mutable defaults.",
+      "detection_signals": [
+        "mutable_default",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "mutable default",
+        "java",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for mutable default and return a structured finding."
+    },
+    {
+      "id": "KB-0125",
+      "language": "python",
+      "type": "bug",
+      "category": "null_dereference",
+      "severity": "medium",
+      "cwe": "CWE-476",
+      "owasp": null,
+      "title": "Null Dereference",
+      "description": "Synthetic python example for detecting null dereference.",
+      "vulnerable_code": "user = find_user(uid)\nreturn user.name",
+      "fixed_code": "user = find_user(uid)\nif user is None: raise NotFound()\nreturn user.name",
+      "why_it_matters": "The pattern can create null dereference risk or reduce reliability.",
+      "remediation": "Validate nullable results before dereferencing.",
+      "detection_signals": [
+        "null_dereference",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "null dereference",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for null dereference and return a structured finding."
+    },
+    {
+      "id": "KB-0126",
+      "language": "java",
+      "type": "bug",
+      "category": "race_condition",
+      "severity": "high",
+      "cwe": "CWE-362",
+      "owasp": null,
+      "title": "Race Condition",
+      "description": "Synthetic java example for detecting race condition.",
+      "vulnerable_code": "if not exists(path):\n    create(path)",
+      "fixed_code": "with file_lock(path):\n    if not exists(path): create(path)",
+      "why_it_matters": "The pattern can create race condition risk or reduce reliability.",
+      "remediation": "Use atomic operations or appropriate synchronization.",
+      "detection_signals": [
+        "race_condition",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "race condition",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for race condition and return a structured finding."
+    },
+    {
+      "id": "KB-0127",
+      "language": "python",
+      "type": "performance",
+      "category": "inefficient_loop",
+      "severity": "low",
+      "cwe": "CWE-407",
+      "owasp": null,
+      "title": "Inefficient Loop",
+      "description": "Synthetic python example for detecting inefficient loop.",
+      "vulnerable_code": "for x in items:\n    for y in items:\n        compare(x, y)",
+      "fixed_code": "seen = set(items)\nfor x in seen: compare(x)",
+      "why_it_matters": "The pattern can create inefficient loop risk or reduce reliability.",
+      "remediation": "Avoid unnecessary nested scans and repeated work.",
+      "detection_signals": [
+        "inefficient_loop",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "inefficient loop",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for inefficient loop and return a structured finding."
+    },
+    {
+      "id": "KB-0128",
+      "language": "java",
+      "type": "best_practice",
+      "category": "missing_validation",
+      "severity": "medium",
+      "cwe": "CWE-20",
+      "owasp": "A04:2021",
+      "title": "Missing Validation",
+      "description": "Synthetic java example for detecting missing validation.",
+      "vulnerable_code": "process_email(request.json['email'])",
+      "fixed_code": "email = EmailStr(request.json['email'])\nprocess_email(email)",
+      "why_it_matters": "The pattern can create missing validation risk or reduce reliability.",
+      "remediation": "Validate untrusted input at the boundary.",
+      "detection_signals": [
+        "missing_validation",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing validation",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing validation and return a structured finding."
+    },
+    {
+      "id": "KB-0129",
+      "language": "python",
+      "type": "security",
+      "category": "sql_injection",
+      "severity": "high",
+      "cwe": "CWE-89",
+      "owasp": "A03:2021",
+      "title": "Sql Injection",
+      "description": "Synthetic python example for detecting sql injection.",
+      "vulnerable_code": "query = \"SELECT * FROM users WHERE id = \" + user_id",
+      "fixed_code": "query = \"SELECT * FROM users WHERE id = ?\"\nexecute(query, (user_id,))",
+      "why_it_matters": "The pattern can create sql injection risk or reduce reliability.",
+      "remediation": "Use parameterized queries.",
+      "detection_signals": [
+        "sql_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "sql injection",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for sql injection and return a structured finding."
+    },
+    {
+      "id": "KB-0130",
+      "language": "java",
+      "type": "security",
+      "category": "command_injection",
+      "severity": "critical",
+      "cwe": "CWE-78",
+      "owasp": "A03:2021",
+      "title": "Command Injection",
+      "description": "Synthetic java example for detecting command injection.",
+      "vulnerable_code": "Runtime.getRuntime().exec(\"ping \" + host, shell=True)",
+      "fixed_code": "new ProcessBuilder(\"ping\", host).start()",
+      "why_it_matters": "The pattern can create command injection risk or reduce reliability.",
+      "remediation": "Avoid shell interpolation; pass arguments safely.",
+      "detection_signals": [
+        "command_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "command injection",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for command injection and return a structured finding."
+    },
+    {
+      "id": "KB-0131",
+      "language": "python",
+      "type": "security",
+      "category": "hardcoded_secret",
+      "severity": "high",
+      "cwe": "CWE-798",
+      "owasp": "A07:2021",
+      "title": "Hardcoded Secret",
+      "description": "Synthetic python example for detecting hardcoded secret.",
+      "vulnerable_code": "API_KEY = \"sk-example-secret\"",
+      "fixed_code": "API_KEY = os.environ['API_KEY']",
+      "why_it_matters": "The pattern can create hardcoded secret risk or reduce reliability.",
+      "remediation": "Load secrets from secure environment/configuration.",
+      "detection_signals": [
+        "hardcoded_secret",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "hardcoded secret",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for hardcoded secret and return a structured finding."
+    },
+    {
+      "id": "KB-0132",
+      "language": "java",
+      "type": "security",
+      "category": "path_traversal",
+      "severity": "high",
+      "cwe": "CWE-22",
+      "owasp": "A01:2021",
+      "title": "Path Traversal",
+      "description": "Synthetic java example for detecting path traversal.",
+      "vulnerable_code": "new FileInputStream(\"/srv/files/\" + filename).read()",
+      "fixed_code": "safe = Path(filename).name\nopen(Path('/srv/files') / safe)",
+      "why_it_matters": "The pattern can create path traversal risk or reduce reliability.",
+      "remediation": "Normalize and constrain paths.",
+      "detection_signals": [
+        "path_traversal",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "path traversal",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for path traversal and return a structured finding."
+    },
+    {
+      "id": "KB-0133",
+      "language": "python",
+      "type": "security",
+      "category": "unsafe_deserialization",
+      "severity": "critical",
+      "cwe": "CWE-502",
+      "owasp": "A08:2021",
+      "title": "Unsafe Deserialization",
+      "description": "Synthetic python example for detecting unsafe deserialization.",
+      "vulnerable_code": "pickle.loads(user_input)",
+      "fixed_code": "data = json.loads(user_input)",
+      "why_it_matters": "The pattern can create unsafe deserialization risk or reduce reliability.",
+      "remediation": "Use safe data formats and validation.",
+      "detection_signals": [
+        "unsafe_deserialization",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "unsafe deserialization",
+        "python",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for unsafe deserialization and return a structured finding."
+    },
+    {
+      "id": "KB-0134",
+      "language": "java",
+      "type": "security",
+      "category": "xss",
+      "severity": "high",
+      "cwe": "CWE-79",
+      "owasp": "A03:2021",
+      "title": "Xss",
+      "description": "Synthetic java example for detecting xss.",
+      "vulnerable_code": "return \"<div>\" + username + \"</div>\"",
+      "fixed_code": "return render_template('user.html', username=username)",
+      "why_it_matters": "The pattern can create xss risk or reduce reliability.",
+      "remediation": "Contextually encode untrusted output.",
+      "detection_signals": [
+        "xss",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "xss",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for xss and return a structured finding."
+    },
+    {
+      "id": "KB-0135",
+      "language": "python",
+      "type": "security",
+      "category": "weak_crypto",
+      "severity": "medium",
+      "cwe": "CWE-327",
+      "owasp": "A02:2021",
+      "title": "Weak Crypto",
+      "description": "Synthetic python example for detecting weak crypto.",
+      "vulnerable_code": "hashlib.md5(password.encode()).hexdigest()",
+      "fixed_code": "hashlib.sha256(password.encode()).hexdigest()",
+      "why_it_matters": "The pattern can create weak crypto risk or reduce reliability.",
+      "remediation": "Use modern cryptographic primitives.",
+      "detection_signals": [
+        "weak_crypto",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "weak crypto",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for weak crypto and return a structured finding."
+    },
+    {
+      "id": "KB-0136",
+      "language": "java",
+      "type": "security",
+      "category": "missing_auth",
+      "severity": "critical",
+      "cwe": "CWE-306",
+      "owasp": "A07:2021",
+      "title": "Missing Auth",
+      "description": "Synthetic java example for detecting missing auth.",
+      "vulnerable_code": "@app.get('/admin')\ndef admin(): return admin_data()",
+      "fixed_code": "@requires_admin\ndef admin(): return admin_data()",
+      "why_it_matters": "The pattern can create missing auth risk or reduce reliability.",
+      "remediation": "Enforce authorization on protected operations.",
+      "detection_signals": [
+        "missing_auth",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing auth",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing auth and return a structured finding."
+    },
+    {
+      "id": "KB-0137",
+      "language": "python",
+      "type": "security",
+      "category": "insecure_random",
+      "severity": "medium",
+      "cwe": "CWE-330",
+      "owasp": "A02:2021",
+      "title": "Insecure Random",
+      "description": "Synthetic python example for detecting insecure random.",
+      "vulnerable_code": "token = random.randint(100000, 999999)",
+      "fixed_code": "token = secrets.randbelow(900000) + 100000",
+      "why_it_matters": "The pattern can create insecure random risk or reduce reliability.",
+      "remediation": "Use cryptographically secure randomness for security tokens.",
+      "detection_signals": [
+        "insecure_random",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "insecure random",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for insecure random and return a structured finding."
+    },
+    {
+      "id": "KB-0138",
+      "language": "java",
+      "type": "quality",
+      "category": "resource_leak",
+      "severity": "medium",
+      "cwe": "CWE-772",
+      "owasp": null,
+      "title": "Resource Leak",
+      "description": "Synthetic java example for detecting resource leak.",
+      "vulnerable_code": "f = new FileInputStream(path); data = f.read()",
+      "fixed_code": "with open(path, encoding='utf-8') as f:\n    data = f.read()",
+      "why_it_matters": "The pattern can create resource leak risk or reduce reliability.",
+      "remediation": "Use context managers or try-with-resources.",
+      "detection_signals": [
+        "resource_leak",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "resource leak",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for resource leak and return a structured finding."
+    },
+    {
+      "id": "KB-0139",
+      "language": "python",
+      "type": "quality",
+      "category": "broad_exception",
+      "severity": "low",
+      "cwe": "CWE-396",
+      "owasp": null,
+      "title": "Broad Exception",
+      "description": "Synthetic python example for detecting broad exception.",
+      "vulnerable_code": "try:\n    work()\nexcept Exception:\n    pass",
+      "fixed_code": "try:\n    work()\nexcept ValueError as exc:\n    logger.warning('%s', exc)",
+      "why_it_matters": "The pattern can create broad exception risk or reduce reliability.",
+      "remediation": "Catch expected exception types and handle them.",
+      "detection_signals": [
+        "broad_exception",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "broad exception",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for broad exception and return a structured finding."
+    },
+    {
+      "id": "KB-0140",
+      "language": "java",
+      "type": "quality",
+      "category": "mutable_default",
+      "severity": "low",
+      "cwe": "CWE-665",
+      "owasp": null,
+      "title": "Mutable Default",
+      "description": "Synthetic java example for detecting mutable default.",
+      "vulnerable_code": "def add_item(item, items=[]): items.append(item)",
+      "fixed_code": "def add_item(item, items=None):\n    items = [] if items is None else items\n    items.append(item)",
+      "why_it_matters": "The pattern can create mutable default risk or reduce reliability.",
+      "remediation": "Avoid shared mutable defaults.",
+      "detection_signals": [
+        "mutable_default",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "mutable default",
+        "java",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for mutable default and return a structured finding."
+    },
+    {
+      "id": "KB-0141",
+      "language": "python",
+      "type": "bug",
+      "category": "null_dereference",
+      "severity": "medium",
+      "cwe": "CWE-476",
+      "owasp": null,
+      "title": "Null Dereference",
+      "description": "Synthetic python example for detecting null dereference.",
+      "vulnerable_code": "user = find_user(uid)\nreturn user.name",
+      "fixed_code": "user = find_user(uid)\nif user is None: raise NotFound()\nreturn user.name",
+      "why_it_matters": "The pattern can create null dereference risk or reduce reliability.",
+      "remediation": "Validate nullable results before dereferencing.",
+      "detection_signals": [
+        "null_dereference",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "null dereference",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for null dereference and return a structured finding."
+    },
+    {
+      "id": "KB-0142",
+      "language": "java",
+      "type": "bug",
+      "category": "race_condition",
+      "severity": "high",
+      "cwe": "CWE-362",
+      "owasp": null,
+      "title": "Race Condition",
+      "description": "Synthetic java example for detecting race condition.",
+      "vulnerable_code": "if not exists(path):\n    create(path)",
+      "fixed_code": "with file_lock(path):\n    if not exists(path): create(path)",
+      "why_it_matters": "The pattern can create race condition risk or reduce reliability.",
+      "remediation": "Use atomic operations or appropriate synchronization.",
+      "detection_signals": [
+        "race_condition",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "race condition",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for race condition and return a structured finding."
+    },
+    {
+      "id": "KB-0143",
+      "language": "python",
+      "type": "performance",
+      "category": "inefficient_loop",
+      "severity": "low",
+      "cwe": "CWE-407",
+      "owasp": null,
+      "title": "Inefficient Loop",
+      "description": "Synthetic python example for detecting inefficient loop.",
+      "vulnerable_code": "for x in items:\n    for y in items:\n        compare(x, y)",
+      "fixed_code": "seen = set(items)\nfor x in seen: compare(x)",
+      "why_it_matters": "The pattern can create inefficient loop risk or reduce reliability.",
+      "remediation": "Avoid unnecessary nested scans and repeated work.",
+      "detection_signals": [
+        "inefficient_loop",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "inefficient loop",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for inefficient loop and return a structured finding."
+    },
+    {
+      "id": "KB-0144",
+      "language": "java",
+      "type": "best_practice",
+      "category": "missing_validation",
+      "severity": "medium",
+      "cwe": "CWE-20",
+      "owasp": "A04:2021",
+      "title": "Missing Validation",
+      "description": "Synthetic java example for detecting missing validation.",
+      "vulnerable_code": "process_email(request.json['email'])",
+      "fixed_code": "email = EmailStr(request.json['email'])\nprocess_email(email)",
+      "why_it_matters": "The pattern can create missing validation risk or reduce reliability.",
+      "remediation": "Validate untrusted input at the boundary.",
+      "detection_signals": [
+        "missing_validation",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing validation",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing validation and return a structured finding."
+    },
+    {
+      "id": "KB-0145",
+      "language": "python",
+      "type": "security",
+      "category": "sql_injection",
+      "severity": "high",
+      "cwe": "CWE-89",
+      "owasp": "A03:2021",
+      "title": "Sql Injection",
+      "description": "Synthetic python example for detecting sql injection.",
+      "vulnerable_code": "query = \"SELECT * FROM users WHERE id = \" + user_id",
+      "fixed_code": "query = \"SELECT * FROM users WHERE id = ?\"\nexecute(query, (user_id,))",
+      "why_it_matters": "The pattern can create sql injection risk or reduce reliability.",
+      "remediation": "Use parameterized queries.",
+      "detection_signals": [
+        "sql_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "sql injection",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for sql injection and return a structured finding."
+    },
+    {
+      "id": "KB-0146",
+      "language": "java",
+      "type": "security",
+      "category": "command_injection",
+      "severity": "critical",
+      "cwe": "CWE-78",
+      "owasp": "A03:2021",
+      "title": "Command Injection",
+      "description": "Synthetic java example for detecting command injection.",
+      "vulnerable_code": "Runtime.getRuntime().exec(\"ping \" + host, shell=True)",
+      "fixed_code": "new ProcessBuilder(\"ping\", host).start()",
+      "why_it_matters": "The pattern can create command injection risk or reduce reliability.",
+      "remediation": "Avoid shell interpolation; pass arguments safely.",
+      "detection_signals": [
+        "command_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "command injection",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for command injection and return a structured finding."
+    },
+    {
+      "id": "KB-0147",
+      "language": "python",
+      "type": "security",
+      "category": "hardcoded_secret",
+      "severity": "high",
+      "cwe": "CWE-798",
+      "owasp": "A07:2021",
+      "title": "Hardcoded Secret",
+      "description": "Synthetic python example for detecting hardcoded secret.",
+      "vulnerable_code": "API_KEY = \"sk-example-secret\"",
+      "fixed_code": "API_KEY = os.environ['API_KEY']",
+      "why_it_matters": "The pattern can create hardcoded secret risk or reduce reliability.",
+      "remediation": "Load secrets from secure environment/configuration.",
+      "detection_signals": [
+        "hardcoded_secret",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "hardcoded secret",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for hardcoded secret and return a structured finding."
+    },
+    {
+      "id": "KB-0148",
+      "language": "java",
+      "type": "security",
+      "category": "path_traversal",
+      "severity": "high",
+      "cwe": "CWE-22",
+      "owasp": "A01:2021",
+      "title": "Path Traversal",
+      "description": "Synthetic java example for detecting path traversal.",
+      "vulnerable_code": "new FileInputStream(\"/srv/files/\" + filename).read()",
+      "fixed_code": "safe = Path(filename).name\nopen(Path('/srv/files') / safe)",
+      "why_it_matters": "The pattern can create path traversal risk or reduce reliability.",
+      "remediation": "Normalize and constrain paths.",
+      "detection_signals": [
+        "path_traversal",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "path traversal",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for path traversal and return a structured finding."
+    },
+    {
+      "id": "KB-0149",
+      "language": "python",
+      "type": "security",
+      "category": "unsafe_deserialization",
+      "severity": "critical",
+      "cwe": "CWE-502",
+      "owasp": "A08:2021",
+      "title": "Unsafe Deserialization",
+      "description": "Synthetic python example for detecting unsafe deserialization.",
+      "vulnerable_code": "pickle.loads(user_input)",
+      "fixed_code": "data = json.loads(user_input)",
+      "why_it_matters": "The pattern can create unsafe deserialization risk or reduce reliability.",
+      "remediation": "Use safe data formats and validation.",
+      "detection_signals": [
+        "unsafe_deserialization",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "unsafe deserialization",
+        "python",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for unsafe deserialization and return a structured finding."
+    },
+    {
+      "id": "KB-0150",
+      "language": "java",
+      "type": "security",
+      "category": "xss",
+      "severity": "high",
+      "cwe": "CWE-79",
+      "owasp": "A03:2021",
+      "title": "Xss",
+      "description": "Synthetic java example for detecting xss.",
+      "vulnerable_code": "return \"<div>\" + username + \"</div>\"",
+      "fixed_code": "return render_template('user.html', username=username)",
+      "why_it_matters": "The pattern can create xss risk or reduce reliability.",
+      "remediation": "Contextually encode untrusted output.",
+      "detection_signals": [
+        "xss",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "xss",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for xss and return a structured finding."
+    },
+    {
+      "id": "KB-0151",
+      "language": "python",
+      "type": "security",
+      "category": "weak_crypto",
+      "severity": "medium",
+      "cwe": "CWE-327",
+      "owasp": "A02:2021",
+      "title": "Weak Crypto",
+      "description": "Synthetic python example for detecting weak crypto.",
+      "vulnerable_code": "hashlib.md5(password.encode()).hexdigest()",
+      "fixed_code": "hashlib.sha256(password.encode()).hexdigest()",
+      "why_it_matters": "The pattern can create weak crypto risk or reduce reliability.",
+      "remediation": "Use modern cryptographic primitives.",
+      "detection_signals": [
+        "weak_crypto",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "weak crypto",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for weak crypto and return a structured finding."
+    },
+    {
+      "id": "KB-0152",
+      "language": "java",
+      "type": "security",
+      "category": "missing_auth",
+      "severity": "critical",
+      "cwe": "CWE-306",
+      "owasp": "A07:2021",
+      "title": "Missing Auth",
+      "description": "Synthetic java example for detecting missing auth.",
+      "vulnerable_code": "@app.get('/admin')\ndef admin(): return admin_data()",
+      "fixed_code": "@requires_admin\ndef admin(): return admin_data()",
+      "why_it_matters": "The pattern can create missing auth risk or reduce reliability.",
+      "remediation": "Enforce authorization on protected operations.",
+      "detection_signals": [
+        "missing_auth",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing auth",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing auth and return a structured finding."
+    },
+    {
+      "id": "KB-0153",
+      "language": "python",
+      "type": "security",
+      "category": "insecure_random",
+      "severity": "medium",
+      "cwe": "CWE-330",
+      "owasp": "A02:2021",
+      "title": "Insecure Random",
+      "description": "Synthetic python example for detecting insecure random.",
+      "vulnerable_code": "token = random.randint(100000, 999999)",
+      "fixed_code": "token = secrets.randbelow(900000) + 100000",
+      "why_it_matters": "The pattern can create insecure random risk or reduce reliability.",
+      "remediation": "Use cryptographically secure randomness for security tokens.",
+      "detection_signals": [
+        "insecure_random",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "insecure random",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for insecure random and return a structured finding."
+    },
+    {
+      "id": "KB-0154",
+      "language": "java",
+      "type": "quality",
+      "category": "resource_leak",
+      "severity": "medium",
+      "cwe": "CWE-772",
+      "owasp": null,
+      "title": "Resource Leak",
+      "description": "Synthetic java example for detecting resource leak.",
+      "vulnerable_code": "f = new FileInputStream(path); data = f.read()",
+      "fixed_code": "with open(path, encoding='utf-8') as f:\n    data = f.read()",
+      "why_it_matters": "The pattern can create resource leak risk or reduce reliability.",
+      "remediation": "Use context managers or try-with-resources.",
+      "detection_signals": [
+        "resource_leak",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "resource leak",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for resource leak and return a structured finding."
+    },
+    {
+      "id": "KB-0155",
+      "language": "python",
+      "type": "quality",
+      "category": "broad_exception",
+      "severity": "low",
+      "cwe": "CWE-396",
+      "owasp": null,
+      "title": "Broad Exception",
+      "description": "Synthetic python example for detecting broad exception.",
+      "vulnerable_code": "try:\n    work()\nexcept Exception:\n    pass",
+      "fixed_code": "try:\n    work()\nexcept ValueError as exc:\n    logger.warning('%s', exc)",
+      "why_it_matters": "The pattern can create broad exception risk or reduce reliability.",
+      "remediation": "Catch expected exception types and handle them.",
+      "detection_signals": [
+        "broad_exception",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "broad exception",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for broad exception and return a structured finding."
+    },
+    {
+      "id": "KB-0156",
+      "language": "java",
+      "type": "quality",
+      "category": "mutable_default",
+      "severity": "low",
+      "cwe": "CWE-665",
+      "owasp": null,
+      "title": "Mutable Default",
+      "description": "Synthetic java example for detecting mutable default.",
+      "vulnerable_code": "def add_item(item, items=[]): items.append(item)",
+      "fixed_code": "def add_item(item, items=None):\n    items = [] if items is None else items\n    items.append(item)",
+      "why_it_matters": "The pattern can create mutable default risk or reduce reliability.",
+      "remediation": "Avoid shared mutable defaults.",
+      "detection_signals": [
+        "mutable_default",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "mutable default",
+        "java",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for mutable default and return a structured finding."
+    },
+    {
+      "id": "KB-0157",
+      "language": "python",
+      "type": "bug",
+      "category": "null_dereference",
+      "severity": "medium",
+      "cwe": "CWE-476",
+      "owasp": null,
+      "title": "Null Dereference",
+      "description": "Synthetic python example for detecting null dereference.",
+      "vulnerable_code": "user = find_user(uid)\nreturn user.name",
+      "fixed_code": "user = find_user(uid)\nif user is None: raise NotFound()\nreturn user.name",
+      "why_it_matters": "The pattern can create null dereference risk or reduce reliability.",
+      "remediation": "Validate nullable results before dereferencing.",
+      "detection_signals": [
+        "null_dereference",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "null dereference",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for null dereference and return a structured finding."
+    },
+    {
+      "id": "KB-0158",
+      "language": "java",
+      "type": "bug",
+      "category": "race_condition",
+      "severity": "high",
+      "cwe": "CWE-362",
+      "owasp": null,
+      "title": "Race Condition",
+      "description": "Synthetic java example for detecting race condition.",
+      "vulnerable_code": "if not exists(path):\n    create(path)",
+      "fixed_code": "with file_lock(path):\n    if not exists(path): create(path)",
+      "why_it_matters": "The pattern can create race condition risk or reduce reliability.",
+      "remediation": "Use atomic operations or appropriate synchronization.",
+      "detection_signals": [
+        "race_condition",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "race condition",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for race condition and return a structured finding."
+    },
+    {
+      "id": "KB-0159",
+      "language": "python",
+      "type": "performance",
+      "category": "inefficient_loop",
+      "severity": "low",
+      "cwe": "CWE-407",
+      "owasp": null,
+      "title": "Inefficient Loop",
+      "description": "Synthetic python example for detecting inefficient loop.",
+      "vulnerable_code": "for x in items:\n    for y in items:\n        compare(x, y)",
+      "fixed_code": "seen = set(items)\nfor x in seen: compare(x)",
+      "why_it_matters": "The pattern can create inefficient loop risk or reduce reliability.",
+      "remediation": "Avoid unnecessary nested scans and repeated work.",
+      "detection_signals": [
+        "inefficient_loop",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "inefficient loop",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for inefficient loop and return a structured finding."
+    },
+    {
+      "id": "KB-0160",
+      "language": "java",
+      "type": "best_practice",
+      "category": "missing_validation",
+      "severity": "medium",
+      "cwe": "CWE-20",
+      "owasp": "A04:2021",
+      "title": "Missing Validation",
+      "description": "Synthetic java example for detecting missing validation.",
+      "vulnerable_code": "process_email(request.json['email'])",
+      "fixed_code": "email = EmailStr(request.json['email'])\nprocess_email(email)",
+      "why_it_matters": "The pattern can create missing validation risk or reduce reliability.",
+      "remediation": "Validate untrusted input at the boundary.",
+      "detection_signals": [
+        "missing_validation",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing validation",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing validation and return a structured finding."
+    },
+    {
+      "id": "KB-0161",
+      "language": "python",
+      "type": "security",
+      "category": "sql_injection",
+      "severity": "high",
+      "cwe": "CWE-89",
+      "owasp": "A03:2021",
+      "title": "Sql Injection",
+      "description": "Synthetic python example for detecting sql injection.",
+      "vulnerable_code": "query = \"SELECT * FROM users WHERE id = \" + user_id",
+      "fixed_code": "query = \"SELECT * FROM users WHERE id = ?\"\nexecute(query, (user_id,))",
+      "why_it_matters": "The pattern can create sql injection risk or reduce reliability.",
+      "remediation": "Use parameterized queries.",
+      "detection_signals": [
+        "sql_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "sql injection",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for sql injection and return a structured finding."
+    },
+    {
+      "id": "KB-0162",
+      "language": "java",
+      "type": "security",
+      "category": "command_injection",
+      "severity": "critical",
+      "cwe": "CWE-78",
+      "owasp": "A03:2021",
+      "title": "Command Injection",
+      "description": "Synthetic java example for detecting command injection.",
+      "vulnerable_code": "Runtime.getRuntime().exec(\"ping \" + host, shell=True)",
+      "fixed_code": "new ProcessBuilder(\"ping\", host).start()",
+      "why_it_matters": "The pattern can create command injection risk or reduce reliability.",
+      "remediation": "Avoid shell interpolation; pass arguments safely.",
+      "detection_signals": [
+        "command_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "command injection",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for command injection and return a structured finding."
+    },
+    {
+      "id": "KB-0163",
+      "language": "python",
+      "type": "security",
+      "category": "hardcoded_secret",
+      "severity": "high",
+      "cwe": "CWE-798",
+      "owasp": "A07:2021",
+      "title": "Hardcoded Secret",
+      "description": "Synthetic python example for detecting hardcoded secret.",
+      "vulnerable_code": "API_KEY = \"sk-example-secret\"",
+      "fixed_code": "API_KEY = os.environ['API_KEY']",
+      "why_it_matters": "The pattern can create hardcoded secret risk or reduce reliability.",
+      "remediation": "Load secrets from secure environment/configuration.",
+      "detection_signals": [
+        "hardcoded_secret",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "hardcoded secret",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for hardcoded secret and return a structured finding."
+    },
+    {
+      "id": "KB-0164",
+      "language": "java",
+      "type": "security",
+      "category": "path_traversal",
+      "severity": "high",
+      "cwe": "CWE-22",
+      "owasp": "A01:2021",
+      "title": "Path Traversal",
+      "description": "Synthetic java example for detecting path traversal.",
+      "vulnerable_code": "new FileInputStream(\"/srv/files/\" + filename).read()",
+      "fixed_code": "safe = Path(filename).name\nopen(Path('/srv/files') / safe)",
+      "why_it_matters": "The pattern can create path traversal risk or reduce reliability.",
+      "remediation": "Normalize and constrain paths.",
+      "detection_signals": [
+        "path_traversal",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "path traversal",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for path traversal and return a structured finding."
+    },
+    {
+      "id": "KB-0165",
+      "language": "python",
+      "type": "security",
+      "category": "unsafe_deserialization",
+      "severity": "critical",
+      "cwe": "CWE-502",
+      "owasp": "A08:2021",
+      "title": "Unsafe Deserialization",
+      "description": "Synthetic python example for detecting unsafe deserialization.",
+      "vulnerable_code": "pickle.loads(user_input)",
+      "fixed_code": "data = json.loads(user_input)",
+      "why_it_matters": "The pattern can create unsafe deserialization risk or reduce reliability.",
+      "remediation": "Use safe data formats and validation.",
+      "detection_signals": [
+        "unsafe_deserialization",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "unsafe deserialization",
+        "python",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for unsafe deserialization and return a structured finding."
+    },
+    {
+      "id": "KB-0166",
+      "language": "java",
+      "type": "security",
+      "category": "xss",
+      "severity": "high",
+      "cwe": "CWE-79",
+      "owasp": "A03:2021",
+      "title": "Xss",
+      "description": "Synthetic java example for detecting xss.",
+      "vulnerable_code": "return \"<div>\" + username + \"</div>\"",
+      "fixed_code": "return render_template('user.html', username=username)",
+      "why_it_matters": "The pattern can create xss risk or reduce reliability.",
+      "remediation": "Contextually encode untrusted output.",
+      "detection_signals": [
+        "xss",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "xss",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for xss and return a structured finding."
+    },
+    {
+      "id": "KB-0167",
+      "language": "python",
+      "type": "security",
+      "category": "weak_crypto",
+      "severity": "medium",
+      "cwe": "CWE-327",
+      "owasp": "A02:2021",
+      "title": "Weak Crypto",
+      "description": "Synthetic python example for detecting weak crypto.",
+      "vulnerable_code": "hashlib.md5(password.encode()).hexdigest()",
+      "fixed_code": "hashlib.sha256(password.encode()).hexdigest()",
+      "why_it_matters": "The pattern can create weak crypto risk or reduce reliability.",
+      "remediation": "Use modern cryptographic primitives.",
+      "detection_signals": [
+        "weak_crypto",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "weak crypto",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for weak crypto and return a structured finding."
+    },
+    {
+      "id": "KB-0168",
+      "language": "java",
+      "type": "security",
+      "category": "missing_auth",
+      "severity": "critical",
+      "cwe": "CWE-306",
+      "owasp": "A07:2021",
+      "title": "Missing Auth",
+      "description": "Synthetic java example for detecting missing auth.",
+      "vulnerable_code": "@app.get('/admin')\ndef admin(): return admin_data()",
+      "fixed_code": "@requires_admin\ndef admin(): return admin_data()",
+      "why_it_matters": "The pattern can create missing auth risk or reduce reliability.",
+      "remediation": "Enforce authorization on protected operations.",
+      "detection_signals": [
+        "missing_auth",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing auth",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing auth and return a structured finding."
+    },
+    {
+      "id": "KB-0169",
+      "language": "python",
+      "type": "security",
+      "category": "insecure_random",
+      "severity": "medium",
+      "cwe": "CWE-330",
+      "owasp": "A02:2021",
+      "title": "Insecure Random",
+      "description": "Synthetic python example for detecting insecure random.",
+      "vulnerable_code": "token = random.randint(100000, 999999)",
+      "fixed_code": "token = secrets.randbelow(900000) + 100000",
+      "why_it_matters": "The pattern can create insecure random risk or reduce reliability.",
+      "remediation": "Use cryptographically secure randomness for security tokens.",
+      "detection_signals": [
+        "insecure_random",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "insecure random",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for insecure random and return a structured finding."
+    },
+    {
+      "id": "KB-0170",
+      "language": "java",
+      "type": "quality",
+      "category": "resource_leak",
+      "severity": "medium",
+      "cwe": "CWE-772",
+      "owasp": null,
+      "title": "Resource Leak",
+      "description": "Synthetic java example for detecting resource leak.",
+      "vulnerable_code": "f = new FileInputStream(path); data = f.read()",
+      "fixed_code": "with open(path, encoding='utf-8') as f:\n    data = f.read()",
+      "why_it_matters": "The pattern can create resource leak risk or reduce reliability.",
+      "remediation": "Use context managers or try-with-resources.",
+      "detection_signals": [
+        "resource_leak",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "resource leak",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for resource leak and return a structured finding."
+    },
+    {
+      "id": "KB-0171",
+      "language": "python",
+      "type": "quality",
+      "category": "broad_exception",
+      "severity": "low",
+      "cwe": "CWE-396",
+      "owasp": null,
+      "title": "Broad Exception",
+      "description": "Synthetic python example for detecting broad exception.",
+      "vulnerable_code": "try:\n    work()\nexcept Exception:\n    pass",
+      "fixed_code": "try:\n    work()\nexcept ValueError as exc:\n    logger.warning('%s', exc)",
+      "why_it_matters": "The pattern can create broad exception risk or reduce reliability.",
+      "remediation": "Catch expected exception types and handle them.",
+      "detection_signals": [
+        "broad_exception",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "broad exception",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for broad exception and return a structured finding."
+    },
+    {
+      "id": "KB-0172",
+      "language": "java",
+      "type": "quality",
+      "category": "mutable_default",
+      "severity": "low",
+      "cwe": "CWE-665",
+      "owasp": null,
+      "title": "Mutable Default",
+      "description": "Synthetic java example for detecting mutable default.",
+      "vulnerable_code": "def add_item(item, items=[]): items.append(item)",
+      "fixed_code": "def add_item(item, items=None):\n    items = [] if items is None else items\n    items.append(item)",
+      "why_it_matters": "The pattern can create mutable default risk or reduce reliability.",
+      "remediation": "Avoid shared mutable defaults.",
+      "detection_signals": [
+        "mutable_default",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "mutable default",
+        "java",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for mutable default and return a structured finding."
+    },
+    {
+      "id": "KB-0173",
+      "language": "python",
+      "type": "bug",
+      "category": "null_dereference",
+      "severity": "medium",
+      "cwe": "CWE-476",
+      "owasp": null,
+      "title": "Null Dereference",
+      "description": "Synthetic python example for detecting null dereference.",
+      "vulnerable_code": "user = find_user(uid)\nreturn user.name",
+      "fixed_code": "user = find_user(uid)\nif user is None: raise NotFound()\nreturn user.name",
+      "why_it_matters": "The pattern can create null dereference risk or reduce reliability.",
+      "remediation": "Validate nullable results before dereferencing.",
+      "detection_signals": [
+        "null_dereference",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "null dereference",
+        "python",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for null dereference and return a structured finding."
+    },
+    {
+      "id": "KB-0174",
+      "language": "java",
+      "type": "bug",
+      "category": "race_condition",
+      "severity": "high",
+      "cwe": "CWE-362",
+      "owasp": null,
+      "title": "Race Condition",
+      "description": "Synthetic java example for detecting race condition.",
+      "vulnerable_code": "if not exists(path):\n    create(path)",
+      "fixed_code": "with file_lock(path):\n    if not exists(path): create(path)",
+      "why_it_matters": "The pattern can create race condition risk or reduce reliability.",
+      "remediation": "Use atomic operations or appropriate synchronization.",
+      "detection_signals": [
+        "race_condition",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "race condition",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for race condition and return a structured finding."
+    },
+    {
+      "id": "KB-0175",
+      "language": "python",
+      "type": "performance",
+      "category": "inefficient_loop",
+      "severity": "low",
+      "cwe": "CWE-407",
+      "owasp": null,
+      "title": "Inefficient Loop",
+      "description": "Synthetic python example for detecting inefficient loop.",
+      "vulnerable_code": "for x in items:\n    for y in items:\n        compare(x, y)",
+      "fixed_code": "seen = set(items)\nfor x in seen: compare(x)",
+      "why_it_matters": "The pattern can create inefficient loop risk or reduce reliability.",
+      "remediation": "Avoid unnecessary nested scans and repeated work.",
+      "detection_signals": [
+        "inefficient_loop",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "inefficient loop",
+        "python",
+        "low",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for inefficient loop and return a structured finding."
+    },
+    {
+      "id": "KB-0176",
+      "language": "java",
+      "type": "best_practice",
+      "category": "missing_validation",
+      "severity": "medium",
+      "cwe": "CWE-20",
+      "owasp": "A04:2021",
+      "title": "Missing Validation",
+      "description": "Synthetic java example for detecting missing validation.",
+      "vulnerable_code": "process_email(request.json['email'])",
+      "fixed_code": "email = EmailStr(request.json['email'])\nprocess_email(email)",
+      "why_it_matters": "The pattern can create missing validation risk or reduce reliability.",
+      "remediation": "Validate untrusted input at the boundary.",
+      "detection_signals": [
+        "missing_validation",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "missing validation",
+        "java",
+        "medium",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for missing validation and return a structured finding."
+    },
+    {
+      "id": "KB-0177",
+      "language": "python",
+      "type": "security",
+      "category": "sql_injection",
+      "severity": "high",
+      "cwe": "CWE-89",
+      "owasp": "A03:2021",
+      "title": "Sql Injection",
+      "description": "Synthetic python example for detecting sql injection.",
+      "vulnerable_code": "query = \"SELECT * FROM users WHERE id = \" + user_id",
+      "fixed_code": "query = \"SELECT * FROM users WHERE id = ?\"\nexecute(query, (user_id,))",
+      "why_it_matters": "The pattern can create sql injection risk or reduce reliability.",
+      "remediation": "Use parameterized queries.",
+      "detection_signals": [
+        "sql_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "sql injection",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for sql injection and return a structured finding."
+    },
+    {
+      "id": "KB-0178",
+      "language": "java",
+      "type": "security",
+      "category": "command_injection",
+      "severity": "critical",
+      "cwe": "CWE-78",
+      "owasp": "A03:2021",
+      "title": "Command Injection",
+      "description": "Synthetic java example for detecting command injection.",
+      "vulnerable_code": "Runtime.getRuntime().exec(\"ping \" + host, shell=True)",
+      "fixed_code": "new ProcessBuilder(\"ping\", host).start()",
+      "why_it_matters": "The pattern can create command injection risk or reduce reliability.",
+      "remediation": "Avoid shell interpolation; pass arguments safely.",
+      "detection_signals": [
+        "command_injection",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "command injection",
+        "java",
+        "critical",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for command injection and return a structured finding."
+    },
+    {
+      "id": "KB-0179",
+      "language": "python",
+      "type": "security",
+      "category": "hardcoded_secret",
+      "severity": "high",
+      "cwe": "CWE-798",
+      "owasp": "A07:2021",
+      "title": "Hardcoded Secret",
+      "description": "Synthetic python example for detecting hardcoded secret.",
+      "vulnerable_code": "API_KEY = \"sk-example-secret\"",
+      "fixed_code": "API_KEY = os.environ['API_KEY']",
+      "why_it_matters": "The pattern can create hardcoded secret risk or reduce reliability.",
+      "remediation": "Load secrets from secure environment/configuration.",
+      "detection_signals": [
+        "hardcoded_secret",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "hardcoded secret",
+        "python",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this python code for hardcoded secret and return a structured finding."
+    },
+    {
+      "id": "KB-0180",
+      "language": "java",
+      "type": "security",
+      "category": "path_traversal",
+      "severity": "high",
+      "cwe": "CWE-22",
+      "owasp": "A01:2021",
+      "title": "Path Traversal",
+      "description": "Synthetic java example for detecting path traversal.",
+      "vulnerable_code": "new FileInputStream(\"/srv/files/\" + filename).read()",
+      "fixed_code": "safe = Path(filename).name\nopen(Path('/srv/files') / safe)",
+      "why_it_matters": "The pattern can create path traversal risk or reduce reliability.",
+      "remediation": "Normalize and constrain paths.",
+      "detection_signals": [
+        "path_traversal",
+        "untrusted input",
+        "unsafe API",
+        "missing validation"
+      ],
+      "rag_keywords": [
+        "path traversal",
+        "java",
+        "high",
+        "secure coding",
+        "code review"
+      ],
+      "test_prompt": "Review this java code for path traversal and return a structured finding."
+    }
+  ]
+}

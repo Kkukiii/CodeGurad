@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.env
+.env.local
+backend/data/*.sqlite3
+*.pyc
+
+# Local databases and runtime data
+*.sqlite3
+*.db
