@@ -24,3 +24,13 @@ def test_rejects_non_array_module_data(tmp_path):
     path.write_text(json.dumps({"name": "security"}), encoding="utf-8")
     with pytest.raises(ValueError, match="JSON array"):
         load_modules(path)
+
+
+def test_default_configuration_contains_all_review_roles():
+    modules = load_modules()
+    assert {module.name for module in modules if module.enabled} == {
+        "code_analysis",
+        "security",
+        "remediation",
+        "pr_summary",
+    }

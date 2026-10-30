@@ -26,6 +26,30 @@ def test_review_reports_evidence_backed_sql_injection():
     assert "cursor.execute" in payload["findings"][0]["evidence"]
 
 
+def test_review_distinguishes_potential_security_from_informational_quality():
+    response = client.post("/api/review", json={
+        "filename": "app.py",
+        "code": "cursor.execute(f'SELECT {user_id}')\ntry:\n    pass\nexcept:\n    pass",
+    })
+    assert response.status_code == 200
+    classifications = {finding["category"]: finding["classification"] for finding in response.json()["findings"]}
+    assert classifications["A03:2021-Injection"] == "potential"
+    assert classifications["code_smell"] == "informational"
+
+
+def test_review_reports_invalid_ai_configuration_without_claiming_unconfigured(monkeypatch):
+    monkeypatch.setenv("AI_PROVIDER", "openai")
+    monkeypatch.delenv("AI_MODEL", raising=False)
+    monkeypatch.delenv("AI_API_KEY", raising=False)
+
+    response = client.post("/api/review", json={"filename": "app.py", "code": "value = 1"})
+
+    assert response.status_code == 200
+    coverage = response.json()["coverage"]
+    assert coverage["ai"] == "skipped_or_failed"
+    assert coverage["ai_provider"] == "invalid_configuration"
+    assert coverage["ai_model"] == "unavailable"
+
 def test_review_rejects_oversized_source():
     response = client.post("/api/review", json={"code": "\n".join(["x = 1"] * 601), "filename": "app.py"})
     assert response.status_code == 413

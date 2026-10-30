@@ -43,6 +43,10 @@ export function createApiClient(client: SupabaseClient) {
     try { payload = body ? JSON.parse(body) : null; } catch { payload = null; }
     if (!response.ok) {
       const detail = typeof payload === "object" && payload !== null && "detail" in payload && typeof payload.detail === "string" ? payload.detail : messageForStatus(response.status);
+      if (response.status === 401) {
+        const { error: signOutError } = await client.auth.signOut({ scope: "local" });
+        if (signOutError) throw new ApiError(401, "Your session has expired. Sign out and sign in again.", requestId);
+      }
       throw new ApiError(response.status, detail, requestId);
     }
     return payload as T;

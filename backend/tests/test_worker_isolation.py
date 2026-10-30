@@ -17,12 +17,16 @@ def test_worker_environment_excludes_application_secrets(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "must-not-cross-boundary")
     monkeypatch.setenv("AI_MAX_INPUT_BYTES", "120000")
     monkeypatch.setenv("AI_MAX_RESPONSE_BYTES", "900000")
+    monkeypatch.delenv("AI_BASE_URL", raising=False)
     environment = worker._worker_environment()
     assert environment["DATABASE_URL"] == "worker-database-placeholder"
     assert "SUPABASE_JWT_SECRET" not in environment
     assert "ANTHROPIC_API_KEY" not in environment
     assert environment["AI_MAX_INPUT_BYTES"] == "120000"
     assert environment["AI_MAX_RESPONSE_BYTES"] == "900000"
+    assert environment["AI_BASE_URL"] == "https://api.openai.com/v1"
+    assert environment["AI_TOTAL_TIMEOUT_SECONDS"] == "45"
+    assert environment["AI_MAX_ATTEMPTS"] == "2"
     assert environment["PYTHONNOUSERSITE"] == "1"
 
 
@@ -39,10 +43,12 @@ def test_duplicate_delivery_does_not_duplicate_findings(monkeypatch, tmp_path):
     review_id, job_id = create_review("owner", "cursor.execute(f'SELECT {user_id}')", "app.py")
     worker.run_job(job_id)
     first = get_review("owner", review_id)
+    first_status = first.status
     worker.run_job(job_id)
     second = get_review("owner", review_id)
     assert get_job("owner", job_id)["attempts"] == 1
     assert len(first.findings) == len(second.findings)
+    assert second.status == first_status
 
 
 def test_finding_ids_are_unique_across_reviews_and_stable_on_retry(monkeypatch, tmp_path):

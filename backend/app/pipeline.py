@@ -7,18 +7,19 @@ from .ai import analyze_with_ai
 from .preprocess import prepare_code
 from .scanner import ScannerFinding, scan_source
 from .schemas import Review, ReviewSummary, normalize_finding_ids
+from .schemas import Finding, Fix
 
 
 REVIEWS: dict[str, Review] = {}
 
 
 def _scanner_finding(item: ScannerFinding):
-    from .schemas import Finding
-
     finding_id = sha256(f"{item.scanner}:{item.rule_id}:{item.line_start}".encode()).hexdigest()[:12]
     return Finding(
         id=finding_id,
         agent="security" if item.category == "security" else "code_analysis",
+        classification="informational" if item.category == "code_quality" else "potential",
+        provenance=[item.scanner],
         category=item.category,
         cwe=item.cwe,
         severity=item.severity,
@@ -31,6 +32,50 @@ def _scanner_finding(item: ScannerFinding):
         scanner=item.scanner,
         rule_id=item.rule_id,
     )
+
+
+def merge_ai_findings(findings: list[Finding], ai_findings: list[Finding]) -> list[Finding]:
+    merged = list(findings)
+    severity_rank = {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
+    for ai_finding in ai_findings:
+        duplicate = next(
+            (
+                index for index, finding in enumerate(merged)
+                if finding.agent == ai_finding.agent
+                and finding.line_start == ai_finding.line_start
+                and finding.line_end == ai_finding.line_end
+                and finding.evidence == ai_finding.evidence
+                and "ai" not in finding.provenance
+            ),
+            None,
+        )
+        if duplicate is None:
+            merged.append(ai_finding)
+            continue
+
+        original = merged[duplicate]
+        descriptions = [original.description]
+        if ai_finding.description not in original.description:
+            descriptions.append(f"AI observation: {ai_finding.description}")
+        if original.fix and ai_finding.fix:
+            fix = Fix(
+                explanation=f"{original.fix.explanation}\nAI suggestion: {ai_finding.fix.explanation}",
+                corrected_code=original.fix.corrected_code or ai_finding.fix.corrected_code,
+                references=list(dict.fromkeys(original.fix.references + ai_finding.fix.references)),
+                verified=original.fix.verified and ai_finding.fix.verified,
+            )
+        else:
+            fix = original.fix or ai_finding.fix
+        merged[duplicate] = original.model_copy(update={
+            "description": " ".join(descriptions),
+            "fix": fix,
+            "provenance": list(dict.fromkeys(original.provenance + ai_finding.provenance)),
+            "severity": max(
+                (original.severity, ai_finding.severity),
+                key=lambda severity: severity_rank[severity],
+            ),
+        })
+    return merged
 
 
 def build_summary(findings) -> ReviewSummary:
@@ -73,7 +118,7 @@ def run_review(code: str, filename: str) -> Review:
     scanner_run = scan_source(code, filename, prepared.language)
     findings.extend(_scanner_finding(item) for item in scanner_run.findings)
     ai_outcome = analyze_with_ai(code, filename, prepared.language, findings)
-    findings.extend(ai_outcome.findings)
+    findings = merge_ai_findings(findings, ai_outcome.findings)
     review_id = str(uuid4())
     findings = normalize_finding_ids(review_id, findings)
     warnings = scanner_run.warnings + ([ai_outcome.warning] if ai_outcome.warning else [])
@@ -87,6 +132,11 @@ def run_review(code: str, filename: str) -> Review:
             "bandit": "completed" if "bandit" in scanner_run.tools else ("not_applicable" if prepared.language != "python" else "skipped_or_failed"),
             "ruff": "completed" if "ruff" in scanner_run.tools else ("not_applicable" if prepared.language != "python" else "skipped_or_failed"),
             "ai": "completed" if ai_outcome.summary else "skipped_or_failed",
+            "ai_provider": ai_outcome.provider or ai_outcome.status,
+            "ai_model": ai_outcome.model or (
+                "not_configured" if ai_outcome.status == "not_configured" else "unavailable"
+            ),
+            "knowledge_retrieval": ai_outcome.knowledge_status,
         },
         warnings=["Local evidence-backed rules are active."] + warnings,
     )

@@ -11,6 +11,8 @@ export interface Fix {
 export interface Finding {
   id: string;
   agent: "code_analysis" | "security";
+  classification: "confirmed" | "potential" | "informational";
+  provenance: string[];
   category: string;
   cwe: string | null;
   owasp_id: string | null;

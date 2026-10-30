@@ -1,79 +1,62 @@
-# Implementation Status
+# Implementation status
 
-Last verified: 2026-10-16. This status reflects local code and checks only; no production service was contacted.
+This report covers local repository code and checks only. No commit, push, deployment, paid service, or external infrastructure change was performed.
 
-## Implemented locally
+## Implemented
 
-- React/Vite Code Editor and Quick Analyze submit Python/Java source to authenticated `/api/v1/reviews`; history, findings, deletion, error states, and cancellable job polling are implemented.
-- FastAPI validates source size, filename and encoding, verifies HS256 or JWKS JWTs, enforces owner filtering, persists SQLite locally or PostgreSQL when `DATABASE_URL` is configured, and records job/findings/scanner coverage.
-- Production requires PostgreSQL/auth configuration, disables the legacy unauthenticated in-memory review/chat routes with 404 responses, and rejects review submissions by default unless `PUBLIC_REVIEWS_ENABLED=true`.
-- Local evidence rules and Semgrep/Bandit/Ruff adapters exist. Scanner subprocesses use argument arrays, `shell=False`, a scrubbed environment, a timeout, bounded output, and temporary-file cleanup. The adapter resolves executables from the active venv when its `Scripts`/`bin` directory is absent from `PATH`. Semgrep receives the one source filename directly, loads the repository-relative local ruleset, and does not use automatic network discovery.
-- Optional OpenAI-compatible analysis validates JSON, receives local/scanner findings as untrusted prompt context, bounds full prompt and response bytes, and has a timeout. AI findings remain labeled separately from scanner evidence.
-- Render describes an API service and static frontend only.
+- Protected API requests use fail-closed HS256/JWKS authentication and owner-scoped review/job access. JWKS mode derives the standard endpoint, issuer, and authenticated audience from backend `SUPABASE_URL` when explicit values are not provided; readiness and token verification use the same validated configuration. An invalid/non-HTTPS Supabase URL or unsupported JWKS algorithm remains a server-side configuration error. Frontend `VITE_` variables do not configure FastAPI.
+- For local development only, if `SUPABASE_URL` is unset, backend auth reads only `VITE_SUPABASE_URL` from the root `.env.local`; production does not read that file. JWKS defaults to trusted asymmetric ES256/RS256 algorithms, and operators can further restrict the allowlist. JWKS transport failures return a distinct provider-unavailable `503` rather than claiming configuration is missing.
+- The signed-in frontend includes an account-scoped overview, review history, searchable severity-filtered findings, profile/logout controls, and a light/dark theme toggle. Counts are derived from persisted API results; load failures expose retry instead of presenting fabricated zero metrics. Projects and report exports are omitted because no such backend features exist.
+- The request middleware counts actual ASGI body bytes, including streamed/chunked requests, and rejects oversized requests before routing. Source size is independently limited.
+- An `http.disconnect` before the final body event causes middleware to return without invoking the application or synthesizing a response for the disconnected peer.
+- PostgreSQL migrations run through `python -m app.migrate`, in filename order, transactionally under an advisory lock. PostgreSQL readiness checks applied migration state and does not change schema. Local SQLite schema initialization remains automatic.
+- Source is treated as data, not executed. Scanner subprocesses use argument arrays, `shell=False`, a reduced allowlisted environment, timeouts, output bounds, and temporary-file cleanup. POSIX timeout termination kills the scanner process group; Windows terminates only the direct scanner process and has no equivalent CPU/memory/process limits here.
+- Local evidence rules and optional Semgrep, Bandit, and Ruff analysis preserve tool coverage and warnings instead of reporting unavailable tools as clean.
+- Four AI roles (code analysis, security, remediation, PR summary) are coordinated in one structured provider response. Strict schemas, bounded input/output and timeouts, bounded retries, sanitized errors, HTTPS for remote endpoints (loopback HTTP only), source-line evidence validation, and retrieved-record ID validation are implemented. Deterministic findings remain available when AI is unconfigured or fails.
+- AI and scanner provenance is retained when matching same-line/same-evidence observations are merged. AI findings remain potential, with no claim of confirmation or exploit verification.
+- Knowledge retrieval is language-filtered lexical ranking over the bundled synthetic knowledge data. It considers source and scanner context and returns up to three records. This is not vector/embedding retrieval or authoritative security guidance.
+- PostgreSQL deployment instructions, request/proxy limits, AI limitations, security boundaries, testing steps, API behavior, and implementation evidence are documented in the README and `docs/`.
+- Render configuration describes only an API web service and static frontend. `PUBLIC_REVIEWS_ENABLED` remains false; no durable queue or isolated worker service is provided.
 
-## Not implemented or not verified
+## Verification completed locally
 
-- The first scanner check used system Python, which lacked the venv `Scripts` directory on `PATH`; all three pinned tools were already installed in `backend/.venv`. The adapter now falls back to `sys.prefix/Scripts` (Windows) or `sys.prefix/bin` (Unix). Real adapter fixture: Semgrep's check ID (ending in `local-python-sql-interpolation`; the CLI prefixes it with the config path) at line 2, Bandit `B608` at line 2 and `B307` at line 4, Ruff `E722` at line 5; all tools ran without warnings. A separate clean fixture ran all three with zero findings and no warnings. Semgrep rules validate with 3 rules. Semgrep 1.136.0's runtime warning recommends `setuptools<81`, verified with installed setuptools 80.10.2. FastAPI 0.142.0+ requires OpenTelemetry API >=1.44 while Semgrep 1.136.0 requires ~=1.25; `backend/requirements.txt` now caps FastAPI below 0.142. `pip-audit` found pytest 8.4.2 vulnerable (PYSEC-2026-1845, fixed in 9.0.3); requirements now require pytest>=9.0.3,<10. With pytest 9.1.1, `pip-audit -r requirements.txt` reported no known vulnerabilities. Semgrep's tomli constraint was restored afterward, and `pip check` passes.
-- `backend/knowledge base/ai_modules.json` is synthetic 180-record data, not a compatible module config. It is not consumed by the LLM or a retrieval/embedding pipeline. `load_modules()` looks for `backend/data/ai_modules.json`, which is absent; `/api/modules` therefore returns an empty list.
-- No hosted model request, embeddings, RAG retrieval, or AI citations were tested. AI output is not deterministic scanner evidence.
-- There is no dedicated worker service or durable queue in `render.yaml`. External mode starts a subprocess on the API instance; this is not an OS sandbox. Windows lacks the POSIX resource limits used on supported Unix systems. Network egress, filesystem, identity, and memory/CPU/process limits need enforcement by the deployment runtime.
-- Request throttling is per process/API instance. Daily review quotas use persistent review counts, but the request limiter is not distributed.
-- No live Supabase login/JWKS, PostgreSQL connection/migration, Render deployment, staging review, or post-deployment check was performed. No report-export endpoint exists.
-- Credential audit found a non-placeholder provider key in the backend environment template. The template assignment was replaced with a placeholder and current tracked/staged scans are clean; the owner must revoke/rotate the exposed key. No matching key-shaped change was found in reachable Git history by the performed pattern search.
-
-## Verification evidence
-
-| Command/check | Result |
+| Check | Result |
 |---|---|
-| `backend/.venv` `python -m pytest -q` | 48 passed in 1.53s; one Starlette/httpx deprecation warning |
-| `backend/.venv` `python -m pytest tests/test_scanner.py -q` | 11 passed, including venv resolution, real timeout termination, bounded output, malformed JSON, cleanup, and Ruff `fix: null` |
-| `python -m pytest tests/test_ai.py -q` | 9 passed using mocks; no provider call |
-| `python -m pytest tests/test_review.py -q` | 5 passed, including production legacy-route denial |
-| `python -m compileall -q app scripts` | Passed |
-| Frontend `npm test -- src/App.test.tsx --reporter=verbose` | 5 passed, including polling cancellation |
-| Frontend `npm test -- --reporter=verbose` | 12 passed across 4 test files |
-| Frontend `npm run lint` | Passed (`tsc --noEmit`) |
-| Frontend `npm run build` | Passed; 75 modules transformed |
-| `npm audit --omit=dev --audit-level=high` | 0 production vulnerabilities |
-| Backend `ruff check app tests` | Passed |
-| Backend `pip-audit -r requirements.txt` | No known vulnerabilities after raising pytest to the advisory-fixed range; temporary audit tool removed afterward to restore Semgrep's tomli constraint |
-| Real scanner adapter fixture | Semgrep, Bandit, and Ruff all executed; expected rule IDs/locations returned; separate clean fixture produced zero findings with all three tools marked executed |
-| Semgrep rules and venv dependencies | Local rules validated (3 rules); `pip check` reports no broken requirements after FastAPI/OpenTelemetry compatibility bound |
-| Local Uvicorn smoke on port 8001 | `/health/live` 200; unauthenticated `/api/v1/reviews` 401; CORS preflight from `http://127.0.0.1:5173` 200 with exact allow-origin; temporary server stopped |
-| Live database/auth/provider/Render checks | Not run; no authorized staging configuration supplied |
+| Full backend suite (`pytest -p no:cacheprovider -q`) | 100 passed; one Starlette/httpx deprecation warning |
+| Focused authentication configuration/JWKS regressions | Included in full suite; covers missing config, derived Supabase JWKS settings, insecure project URL, unsupported algorithm, token validation, and readiness |
+| Ruff (`ruff check app tests scripts`) | Passed |
+| Python compilation (`compileall -q app tests scripts`) | Passed |
+| Backend package consistency (`pip check`) | No broken requirements |
+| Python vulnerability audit | Not run: `pip-audit` is not installed; `pip check` verifies dependency consistency, not known vulnerabilities |
+| Frontend tests (`npm test -- --run`) | 22 passed across 4 test files |
+| Frontend lint (`tsc --noEmit`) | Passed |
+| Frontend production build (`npm run build`) | Passed; Vite transformed 75 modules |
+| Frontend production dependency audit | Previously returned 0 vulnerabilities with `npm audit --omit=dev --audit-level=high`; not rerun in this audit because it contacts the package registry |
+| Real scanner executable verification | Passed with Semgrep 1.136.0, Bandit 1.8.6, Ruff 0.12.10 |
+| Local Semgrep rules validation | Exit code 0; 3 local rules |
+| Real Python vulnerable-looking fixture | Semgrep `local-python-sql-interpolation` line 2; Bandit B608 line 2, B307 line 3, B110 line 6; Ruff F821 line 2 and E722 line 6 |
+| Real clean Python fixture | All three tools executed; no findings or scanner warnings |
+| Real Java vulnerable-looking fixture | Semgrep `local-java-object-deserialization` line 2 |
+| Real clean Java fixture | Semgrep executed; no findings or scanner warnings |
+| Migration runner unit tests | Initial migration, repeat run, readiness not applying pending migrations, and rollback failure path covered with fake connections |
+| `git diff --check` | Passed |
 
-The project-venv pytest run emitted one Starlette/httpx deprecation warning. API/worker unit tests replace scanner executable resolution with a no-scanner result so normal tests remain fast; scanner execution is validated separately with real temporary fixtures. The CI Ruff check and CI runtime-requirements `pip-audit` command were run locally. CI itself was inspected but not executed. Editor diagnostics reported no errors in touched source files.
+Scanner fixture results are real local executable runs and are separate from mocked adapter/provider tests. Semgrep rule validation emitted an ignored trust-anchor notice and a `pkg_resources` deprecation warning; validation still succeeded. Fixture scans emitted zero adapter warnings. No fixture was executed.
 
-## Configuration and deployment
+The provider, migration, ownership, and worker behavior tests use local test doubles or SQLite; they are not live service verification. Mocked provider tests are not live AI inference.
 
-- Backend reads process environment directly; `.env.example` is not auto-loaded. The Vite frontend reads root `.env.local` via `envDir: ".."`.
-- Backend settings include `APP_ENV`, `PUBLIC_REVIEWS_ENABLED`, `DATABASE_URL`, `SECURE_REVIEW_DB`, `SUPABASE_JWT_MODE`, `SUPABASE_JWT_SECRET` or `SUPABASE_JWKS_URL` plus `SUPABASE_JWT_ISSUER` and `SUPABASE_JWT_AUDIENCE`, `CORS_ALLOWED_ORIGINS`, `WORKER_MODE`, `WORKER_DATABASE_URL`, `SEMGREP_RULES_PATH`, and optional `AI_PROVIDER`, `AI_MODEL`, `AI_API_KEY`, `AI_BASE_URL`, `AI_TIMEOUT_SECONDS`, `AI_MAX_INPUT_BYTES`, `AI_MAX_RESPONSE_BYTES`. AI byte limits are passed to external workers; credentials remain excluded from scanner subprocess environments.
-- Frontend variables are `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, and `VITE_API_BASE_URL`; no backend secret belongs in the frontend build.
-- PostgreSQL schema is in `backend/migrations/001_initial.sql`. Live migration state and transaction behavior were not verified. Do not point migrations at production without explicit review and backup.
-- Render API health check is `/health/live`; `CORS_ALLOWED_ORIGINS` must match the deployed static-site origin. Configure secrets only on the API service and public Supabase/API settings on the static frontend.
-- Before deployment: rotate the exposed provider key; authorize staging credentials; verify JWT mode and PostgreSQL; run pinned scanners in an isolated Linux worker; add a durable queue and runtime isolation; configure distributed rate limits and retention; review migrations.
-- After deployment: verify health/readiness, CORS, invalid/valid auth, review create/poll/read/delete and cross-user denial, scanner coverage/failure handling, and sanitized logs. No deployment was attempted.
+## Unverified integrations and remaining risks
 
-## Run locally (PowerShell)
+- No AI provider/model/key is configured in the process environment, so no provider request was made. Do not copy secrets into chat. Configure the documented server-only values locally if authorized.
+- No live Supabase/JWKS, PostgreSQL, Render, or staging verification was performed. Fake migration connections do not validate PostgreSQL server behavior. The API process must still receive the actual `SUPABASE_URL` and signing algorithm configuration.
+- `render.yaml` has no PostgreSQL service, durable queue, or dedicated worker. External worker mode launches a child process on the API host; this is not a hardened sandbox or durable queue. Windows does not get the configured POSIX scanner resource limits. Keep public reviews disabled.
+- Application-level body limiting should be paired with an ASGI server/reverse-proxy cap so oversized chunks are rejected before reaching application memory.
+- Submitted source is persisted with the review; no retention/expiry policy exists. Request throttling is per API instance rather than distributed.
+- The synthetic knowledge records can be incomplete or incorrect and are not security authorities. Retrieval is lexical and limited to the current review context.
+- No complete worker-level deadline or durable recovery supervisor is implemented; scanner subprocess and AI provider timeouts are bounded individually, but the child worker runs on the API host and can leave jobs running if it is terminated or stalls outside those bounded calls.
 
-Backend terminal (reuses `.venv` if present):
+## Configuration and artifact audit
 
-```powershell
-if ((Split-Path -Leaf (Get-Location).Path) -ne "backend") { Set-Location .\backend }
-if (-not (Test-Path .venv)) { py -m venv .venv }
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python -m pip install -r scanner-requirements.txt
-$env:APP_ENV = "development"
-# Set this process's JWT/JWKS settings for the project's signing mode before starting.
-python -m uvicorn app.main:app --reload
-```
-
-Frontend terminal, from the repository root:
-
-```powershell
-if (-not (Test-Path .env.local)) { Copy-Item frontend\.env.example .env.local }
-cd frontend
-npm ci
-npm run dev
-```
+- Backend settings are read from process environment; `.env.example` is documentation only. The frontend uses public `VITE_` settings. `.env.local` was not opened or modified.
+- The backend example environment contains placeholders only. Rotate any provider credential that was real or exposed in an earlier local copy; no credential values are included here.
+- Scanner verification uses temporary fixtures and removes them. No commit, push, deploy, external database migration, or external service configuration was performed.

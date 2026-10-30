@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 import json
@@ -5,8 +6,13 @@ import threading
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
+from pathlib import Path
+from urllib.parse import urlsplit
 
 from fastapi import Header, HTTPException
+
+
+logger = logging.getLogger("secure_review.auth")
 
 
 @dataclass
@@ -18,6 +24,11 @@ class _JwksCache:
 
 _jwks_cache: _JwksCache | None = None
 _jwks_lock = threading.Lock()
+_SUPPORTED_JWKS_ALGORITHMS = {
+    "RS256", "RS384", "RS512",
+    "PS256", "PS384", "PS512",
+    "ES256", "ES384", "ES512",
+}
 
 
 def _configuration_error() -> HTTPException:
@@ -27,11 +38,126 @@ def _configuration_error() -> HTTPException:
     )
 
 
+def _jwks_unavailable_error() -> HTTPException:
+    return HTTPException(
+        status_code=503,
+        detail="Authentication provider is unavailable",
+    )
+
+
 def _claims_options() -> tuple[str | None, str | None]:
     return (
         os.getenv("SUPABASE_JWT_ISSUER"),
         os.getenv("SUPABASE_JWT_AUDIENCE"),
     )
+
+
+def _supabase_url() -> str:
+    configured_url = os.getenv("SUPABASE_URL")
+    if configured_url:
+        return configured_url.strip()
+    if os.getenv("APP_ENV", "development").lower() != "development":
+        return ""
+
+    configured_url = os.getenv("VITE_SUPABASE_URL")
+    if configured_url:
+        return configured_url.strip()
+
+    return _read_local_supabase_url(
+        Path(__file__).resolve().parents[2] / ".env.local"
+    )
+
+
+def _read_local_supabase_url(path: Path) -> str:
+    try:
+        with path.open(encoding="utf-8") as environment_file:
+            for line in environment_file:
+                name, separator, value = line.partition("=")
+                if separator and name.strip() == "VITE_SUPABASE_URL":
+                    return value.strip().strip("\"'")
+    except OSError:
+        return ""
+    return ""
+
+
+def _jwt_mode() -> str:
+    configured_mode = os.getenv("SUPABASE_JWT_MODE")
+    if configured_mode:
+        return configured_mode.lower()
+    return "jwks" if _supabase_url() else "hs256"
+
+
+def _jwks_configuration() -> tuple[str, str, str] | None:
+    supabase_url = _supabase_url().rstrip("/")
+    project = urlsplit(supabase_url)
+    if (
+        supabase_url
+        and (
+            project.scheme != "https"
+            or not project.hostname
+            or project.username
+            or project.password
+            or project.query
+            or project.fragment
+            or project.path not in ("", "/")
+        )
+    ):
+        return None
+
+    project_url = f"{project.scheme}://{project.netloc}" if project.hostname else ""
+    jwks_url = os.getenv("SUPABASE_JWKS_URL") or (
+        f"{project_url}/auth/v1/.well-known/jwks.json" if project_url else ""
+    )
+    issuer = os.getenv("SUPABASE_JWT_ISSUER") or (
+        f"{project_url}/auth/v1" if project_url else ""
+    )
+    audience = os.getenv("SUPABASE_JWT_AUDIENCE") or (
+        "authenticated" if project_url else ""
+    )
+
+    jwks = urlsplit(jwks_url)
+    issuer_url = urlsplit(issuer)
+    if (
+        not jwks_url
+        or jwks.scheme != "https"
+        or not jwks.hostname
+        or jwks.username
+        or jwks.password
+        or jwks.query
+        or jwks.fragment
+        or not issuer
+        or issuer_url.scheme != "https"
+        or not issuer_url.hostname
+        or issuer_url.username
+        or issuer_url.password
+        or issuer_url.query
+        or issuer_url.fragment
+        or not audience
+    ):
+        return None
+    return jwks_url, issuer, audience
+
+
+def _jwks_algorithms() -> list[str]:
+    return [
+        item.strip()
+        for item in os.getenv("SUPABASE_JWT_ALLOWED_ALGORITHMS", "ES256,RS256").split(",")
+        if item.strip()
+    ]
+
+
+def auth_is_configured() -> bool:
+    mode = _jwt_mode()
+    if mode == "hs256":
+        return bool(os.getenv("SUPABASE_JWT_SECRET"))
+    if mode == "jwks":
+        algorithms = _jwks_algorithms()
+        return (
+            _jwks_configuration() is not None
+            and bool(algorithms)
+            and all(algorithm in _SUPPORTED_JWKS_ALGORITHMS for algorithm in algorithms)
+        )
+    return False
 
 
 def _load_jwks(url: str, force_refresh: bool = False) -> list[dict]:
@@ -76,7 +202,7 @@ def _load_jwks(url: str, force_refresh: bool = False) -> list[dict]:
             json.JSONDecodeError,
             urllib.error.URLError,
         ):
-            raise _configuration_error() from None
+            raise _jwks_unavailable_error() from None
 
         max_age = min(
             900,
@@ -105,10 +231,12 @@ def _verify_jwks(
     issuer: str | None,
     audience: str | None,
 ) -> str:
-    url = os.getenv("SUPABASE_JWKS_URL")
-
-    if not url or not issuer or not audience:
+    configuration = _jwks_configuration()
+    if configuration is None:
         raise _configuration_error()
+    url, configured_issuer, configured_audience = configuration
+    issuer = issuer or configured_issuer
+    audience = audience or configured_audience
 
     try:
         import jwt
@@ -122,14 +250,7 @@ def _verify_jwks(
         algorithm = header.get("alg")
         kid = header.get("kid")
 
-        allowed = [
-            item.strip()
-            for item in os.getenv(
-                "SUPABASE_JWT_ALLOWED_ALGORITHMS",
-                "RS256",
-            ).split(",")
-            if item.strip()
-        ]
+        allowed = _jwks_algorithms()
 
         if (
             algorithm not in allowed
@@ -226,10 +347,9 @@ def _verify_jwks(
         KeyError,
         InvalidTokenError,
     ) as exc:
-        # Safe diagnostic: does not print the JWT/token.
-        print(
-            f"JWT verification failed: "
-            f"{type(exc).__name__}: {exc}"
+        logger.warning(
+            "jwt_verification_failed",
+            extra={"mode": "jwks", "error_type": type(exc).__name__},
         )
 
         raise HTTPException(
@@ -241,16 +361,6 @@ def _verify_jwks(
 def verify_token(
     authorization: str | None,
 ) -> str:
-    # Safe diagnostic: never print the actual token.
-    print(
-        "AUTH DEBUG:",
-        (
-            "Authorization header received"
-            if authorization
-            else "NO Authorization header"
-        ),
-    )
-
     if not authorization:
         raise HTTPException(
             status_code=401,
@@ -258,10 +368,6 @@ def verify_token(
         )
 
     if not authorization.startswith("Bearer "):
-        print(
-            "AUTH DEBUG: Authorization header is not Bearer"
-        )
-
         raise HTTPException(
             status_code=401,
             detail="Authentication required",
@@ -277,16 +383,11 @@ def verify_token(
             detail="Authentication required",
         )
 
-    mode = os.getenv(
-        "SUPABASE_JWT_MODE",
-        "hs256",
-    ).lower()
+    mode = _jwt_mode()
 
     issuer, audience = _claims_options()
 
     if mode == "jwks":
-        print("AUTH DEBUG: Verifying JWT using JWKS")
-
         return _verify_jwks(
             token,
             issuer,
@@ -326,9 +427,9 @@ def verify_token(
         raise _configuration_error() from None
 
     except InvalidTokenError as exc:
-        print(
-            "AUTH DEBUG: HS256 verification failed:",
-            type(exc).__name__,
+        logger.warning(
+            "jwt_verification_failed",
+            extra={"mode": "hs256", "error_type": type(exc).__name__},
         )
 
         raise HTTPException(

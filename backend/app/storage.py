@@ -104,6 +104,12 @@ def init_db() -> None:
         )
 
 
+def migrate_db() -> None:
+    if not _use_postgres():
+        raise RuntimeError("Explicit migrations require DATABASE_URL")
+    _postgres().migrate_db()
+
+
 def create_review(owner_id: str, code: str, filename: str) -> tuple[str, str]:
     if _use_postgres():
         return _postgres().create_review(owner_id, code, filename)
@@ -176,14 +182,16 @@ def load_job(job_id: str) -> dict[str, Any] | None:
         return dict(row) if row else None
 
 
-def update_job_running(job_id: str) -> None:
+def update_job_running(job_id: str) -> bool:
     if _use_postgres():
         return _postgres().update_job_running(job_id)
     now = _now()
     with connect() as connection:
         result = connection.execute("UPDATE jobs SET status = 'running', attempts = attempts + 1, started_at = ? WHERE id = ? AND status = 'queued'", (now, job_id))
+        if result.rowcount != 1:
+            return False
         connection.execute("UPDATE reviews SET status = 'running', updated_at = ? WHERE job_id = ?", (now, job_id))
-        return result.rowcount == 1
+        return True
 
 
 def requeue_job(job_id: str) -> None:

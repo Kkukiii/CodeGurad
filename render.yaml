@@ -3,7 +3,7 @@ services:
     name: secure-review-api
     runtime: python
     rootDir: backend
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt -r scanner-requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health/live
     envVars:
@@ -13,7 +13,11 @@ services:
         value: "false"
       - key: DATABASE_URL
         sync: false
+      - key: SUPABASE_URL
+        sync: false
       - key: SUPABASE_JWT_MODE
+        sync: false
+      - key: SUPABASE_JWT_ALLOWED_ALGORITHMS
         sync: false
       - key: SUPABASE_JWT_SECRET
         sync: false

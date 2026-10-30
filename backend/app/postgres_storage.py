@@ -11,6 +11,7 @@ from .schemas import Finding, Review, ReviewSummary, normalize_finding_ids
 
 
 MIGRATIONS = Path(__file__).parents[1] / "migrations"
+MIGRATION_LOCK_ID = 7730846152264042305
 
 
 def _now() -> datetime:
@@ -30,11 +31,33 @@ def connect():
     return psycopg.connect(database_url, row_factory=dict_row, connect_timeout=timeout)
 
 
-def init_db() -> None:
+def _migration_files() -> list[Path]:
+    migrations = sorted(MIGRATIONS.glob("*.sql"))
+    versions = [migration.name for migration in migrations]
+    if len(versions) != len(set(versions)):
+        raise RuntimeError("Migration filenames must be unique")
+    return migrations
+
+
+def check_db() -> None:
     with connect() as connection:
+        applied = {row["version"] for row in connection.execute("SELECT version FROM schema_migrations").fetchall()}
+        pending = [migration.name for migration in _migration_files() if migration.name not in applied]
+        if pending:
+            raise RuntimeError("Database migrations are pending; run `python -m app.migrate`")
+
+
+def init_db() -> None:
+    check_db()
+
+
+def migrate_db() -> None:
+    migrations = _migration_files()
+    with connect() as connection:
+        connection.execute("SELECT pg_advisory_xact_lock(%s)", (MIGRATION_LOCK_ID,))
         connection.execute("CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())")
         applied = {row["version"] for row in connection.execute("SELECT version FROM schema_migrations").fetchall()}
-        for migration in sorted(MIGRATIONS.glob("*.sql")):
+        for migration in migrations:
             if migration.name in applied:
                 continue
             connection.execute(migration.read_text(encoding="utf-8"))
@@ -86,11 +109,13 @@ def load_job(job_id: str) -> dict[str, Any] | None:
         return connection.execute("SELECT j.*, r.source, r.filename, r.language FROM jobs j JOIN reviews r ON r.id = j.review_id WHERE j.id = %s", (job_id,)).fetchone()
 
 
-def update_job_running(job_id: str) -> None:
+def update_job_running(job_id: str) -> bool:
     with connect() as connection:
         result = connection.execute("UPDATE jobs SET status = 'running', attempts = attempts + 1, started_at = %s WHERE id = %s AND status = 'queued'", (_now(), job_id))
+        if result.rowcount != 1:
+            return False
         connection.execute("UPDATE reviews SET status = 'running', updated_at = %s WHERE job_id = %s", (_now(), job_id))
-        return result.rowcount == 1
+        return True
 
 
 def requeue_job(job_id: str) -> None:

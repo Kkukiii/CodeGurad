@@ -120,3 +120,35 @@ def test_scanner_timeout_terminates_process(tmp_path):
     )
     assert payload is None
     assert error == "timed out"
+
+
+def test_scanner_termination_kills_the_posix_process_group(monkeypatch):
+    class Process:
+        pid = 12345
+
+        def __init__(self):
+            self.killed = False
+            self.waited = False
+
+        def kill(self):
+            self.killed = True
+
+        def wait(self):
+            self.waited = True
+
+    process = Process()
+    killed_groups = []
+    monkeypatch.setattr(scanner.os, "name", "posix")
+    monkeypatch.setattr(scanner.signal, "SIGKILL", 9, raising=False)
+    monkeypatch.setattr(
+        scanner.os,
+        "killpg",
+        lambda pid, sig: killed_groups.append((pid, sig)),
+        raising=False,
+    )
+
+    scanner._terminate_process(process)
+
+    assert killed_groups == [(process.pid, 9)]
+    assert not process.killed
+    assert process.waited

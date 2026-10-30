@@ -1,5 +1,6 @@
 import json
 import os
+import signal
 import shutil
 import subprocess
 import tempfile
@@ -140,6 +141,19 @@ def _scanner_executable(name: str) -> str | None:
     return str(candidate) if candidate.is_file() else None
 
 
+def _terminate_process(process: subprocess.Popen) -> None:
+    if os.name == "nt":
+        process.kill()
+    else:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        except OSError:
+            process.kill()
+    process.wait()
+
+
 def _run_json(command: list[str], cwd: Path, timeout: int | None = None) -> tuple[dict | list | None, str | None]:
     timeout = timeout or max(1, int(os.getenv("REVIEW_TIMEOUT_SECONDS", "60")))
     max_output = max(1024, int(os.getenv("MAX_SCANNER_OUTPUT_BYTES", "1000000")))
@@ -150,8 +164,8 @@ def _run_json(command: list[str], cwd: Path, timeout: int | None = None) -> tupl
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=False,
             start_new_session=os.name != "nt", preexec_fn=_resource_limits(),
         )
-    except FileNotFoundError as error:
-        return None, str(error)
+    except OSError as error:
+        return None, f"could not start scanner ({type(error).__name__})"
 
     stdout = bytearray()
     stderr = bytearray()
@@ -193,8 +207,7 @@ def _run_json(command: list[str], cwd: Path, timeout: int | None = None) -> tupl
             continue
 
     if process.poll() is None:
-        process.kill()
-        process.wait()
+        _terminate_process(process)
     for reader in readers:
         reader.join()
 
@@ -203,15 +216,14 @@ def _run_json(command: list[str], cwd: Path, timeout: int | None = None) -> tupl
     if timed_out:
         return None, "timed out"
     stdout_text = stdout.decode("utf-8", errors="replace")
-    stderr_text = stderr.decode("utf-8", errors="replace")
     if process.returncode not in (0, 1):
-        return None, stderr_text.strip() or f"exit code {process.returncode}"
+        return None, f"scanner exited with code {process.returncode}"
     try:
         if not stdout_text.strip():
             return None, "empty scanner output"
         return json.loads(stdout_text), None
-    except json.JSONDecodeError as error:
-        return None, f"invalid JSON output: {error}"
+    except json.JSONDecodeError:
+        return None, "scanner returned invalid JSON"
 
 
 def _add_scanner_results(name, payload, parser, tools, findings, warnings) -> None:

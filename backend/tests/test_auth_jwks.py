@@ -16,6 +16,8 @@ SECRET = "test-only-secret-32-bytes-long!!"
 @pytest.fixture(autouse=True)
 def isolate_jwks_algorithm_configuration(monkeypatch):
     monkeypatch.setenv("SUPABASE_JWT_ALLOWED_ALGORITHMS", "RS256")
+    monkeypatch.delenv("SUPABASE_URL", raising=False)
+    monkeypatch.delenv("VITE_SUPABASE_URL", raising=False)
 
 
 def _b64(value: int) -> str:
@@ -65,6 +67,73 @@ def test_jwks_validates_rsa_key_and_claims(monkeypatch):
     assert auth.verify_token(f"Bearer {token}") == "user"
 
 
+def test_jwks_derives_standard_settings_from_supabase_url(monkeypatch):
+    private, payload = _key_material()
+    auth._jwks_cache = None
+    monkeypatch.delenv("SUPABASE_JWT_MODE", raising=False)
+    monkeypatch.delenv("SUPABASE_JWKS_URL", raising=False)
+    monkeypatch.delenv("SUPABASE_JWT_ISSUER", raising=False)
+    monkeypatch.delenv("SUPABASE_JWT_AUDIENCE", raising=False)
+    monkeypatch.setenv("SUPABASE_URL", "https://project.example.supabase.co/")
+    monkeypatch.setattr(auth.urllib.request, "urlopen", lambda request, timeout: _Response(payload))
+    token = jwt.encode(
+        {
+            "sub": "user",
+            "exp": int(time.time()) + 300,
+            "iss": "https://project.example.supabase.co/auth/v1",
+            "aud": "authenticated",
+        },
+        private,
+        algorithm="RS256",
+        headers={"kid": "key-1"},
+    )
+
+    assert auth.auth_is_configured()
+    assert auth.verify_token(f"Bearer {token}") == "user"
+
+
+def test_local_jwks_uses_frontend_project_url_when_backend_url_is_unset(monkeypatch):
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.delenv("SUPABASE_URL", raising=False)
+    monkeypatch.delenv("SUPABASE_JWT_MODE", raising=False)
+    monkeypatch.delenv("SUPABASE_JWKS_URL", raising=False)
+    monkeypatch.delenv("SUPABASE_JWT_ISSUER", raising=False)
+    monkeypatch.delenv("SUPABASE_JWT_AUDIENCE", raising=False)
+    monkeypatch.setenv("VITE_SUPABASE_URL", "https://project.example.supabase.co")
+
+    assert auth.auth_is_configured()
+    assert auth._jwks_configuration() == (
+        "https://project.example.supabase.co/auth/v1/.well-known/jwks.json",
+        "https://project.example.supabase.co/auth/v1",
+        "authenticated",
+    )
+
+
+def test_local_env_reader_returns_only_public_project_url(tmp_path):
+    environment_file = tmp_path / ".env.local"
+    environment_file.write_text(
+        "VITE_SUPABASE_PUBLISHABLE_KEY=do-not-return-this\n"
+        "VITE_SUPABASE_URL='https://project.example.supabase.co'\n",
+        encoding="utf-8",
+    )
+
+    assert auth._read_local_supabase_url(environment_file) == "https://project.example.supabase.co"
+
+
+def test_production_does_not_load_frontend_local_environment(monkeypatch):
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.delenv("SUPABASE_URL", raising=False)
+    monkeypatch.setenv("VITE_SUPABASE_URL", "https://frontend-project.example.supabase.co")
+    monkeypatch.delenv("SUPABASE_JWT_MODE", raising=False)
+
+    def reject_local_environment(_path):
+        raise AssertionError("local env must not be read")
+
+    monkeypatch.setattr(auth, "_read_local_supabase_url", reject_local_environment)
+
+    assert not auth.auth_is_configured()
+
+
 def test_jwks_unknown_kid_refreshes_then_rejects(monkeypatch):
     private, payload = _key_material()
     auth._jwks_cache = None
@@ -95,6 +164,7 @@ def test_jwks_outage_fails_closed(monkeypatch):
         token = jwt.encode({"sub": "user", "exp": int(time.time()) + 300, "iss": "https://issuer.example", "aud": "authenticated"}, private, algorithm="RS256", headers={"kid": "key-1"})
         auth.verify_token(f"Bearer {token}")
     assert error.value.status_code == 503
+    assert error.value.detail == "Authentication provider is unavailable"
 
 
 def test_jwks_rejects_none_algorithm(monkeypatch):

@@ -1,7 +1,7 @@
 import re
 from hashlib import sha256
 
-from .schemas import Finding, Fix
+from .schemas import Finding, FindingClassification, Fix
 
 
 SEVERITY_RANK = {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
@@ -14,10 +14,12 @@ def _finding_id(title: str, line: int) -> str:
 def _finding(
     *, agent: str, category: str, cwe: str | None, owasp_id: str | None,
     severity: str, line: int, title: str, description: str, evidence: str,
-    fix: Fix,
+    fix: Fix, classification: FindingClassification = "potential",
 ) -> Finding:
     return Finding(
-        id=_finding_id(title, line), agent=agent, category=category, cwe=cwe,
+        id=_finding_id(title, line), agent=agent, classification=classification,
+        provenance=["local_rules"],
+        category=category, cwe=cwe,
         owasp_id=owasp_id, severity=severity, line_start=line, line_end=line,
         title=title, description=description, evidence=evidence, confidence=0.98,
         fix=fix,
@@ -72,6 +74,7 @@ def analyze(lines: list[str], language: str) -> list[Finding]:
                 description="Catching every exception without narrowing the type or recording context can conceal defects and security-relevant failures.",
                 evidence=stripped,
                 fix=Fix(explanation="Catch the expected exception types, log useful context, and preserve the failure contract.", corrected_code="except ValueError as error:\n    logger.warning(\"Invalid input: %s\", error)", references=["Python Exception Handling Guidelines"]),
+                classification="informational",
             ))
     if language == "unknown" and lines:
         findings.append(_finding(
@@ -81,6 +84,7 @@ def analyze(lines: list[str], language: str) -> list[Finding]:
             description="Use a .py or .java filename so language-specific checks can be applied.",
             evidence=lines[0].strip(),
             fix=Fix(explanation="Submit Python or Java source with its file extension.", corrected_code=lines[0], references=[]),
+            classification="informational",
         ))
     return dedupe(findings)
 

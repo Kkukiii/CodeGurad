@@ -1,10 +1,18 @@
 .venv/
 __pycache__/
 .pytest_cache/
+.ruff_cache/
 .env
 .env.local
+.env.*
+!.env.example
 backend/data/*.sqlite3
 *.pyc
+*.log
+node_modules/
+dist/
+.vite/
+coverage/
 
 # Local databases and runtime data
 *.sqlite3

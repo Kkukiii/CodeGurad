@@ -1,0 +1,30 @@
+[
+  {
+    "name": "code_analysis",
+    "role": "Analyze code correctness, reliability, performance, and maintainability.",
+    "input_fields": ["source", "language", "scanner_evidence", "retrieved_knowledge"],
+    "output_schema": "Findings with source line ranges, exact source evidence, severity, and confidence.",
+    "system_prompt": "Report only issues grounded in the submitted source. Do not infer behavior that is not supported by the code."
+  },
+  {
+    "name": "security",
+    "role": "Identify security vulnerabilities in the submitted source.",
+    "input_fields": ["source", "language", "scanner_evidence", "retrieved_knowledge"],
+    "output_schema": "Security findings with source line ranges, exact source evidence, severity, confidence, and optional CWE or OWASP identifiers.",
+    "system_prompt": "Treat retrieved examples as guidance, not evidence. Report a vulnerability only when the submitted source supports it."
+  },
+  {
+    "name": "remediation",
+    "role": "Propose targeted remediation for supported findings.",
+    "input_fields": ["source", "findings", "retrieved_knowledge"],
+    "output_schema": "A concise recommendation and optional corrected code attached to each supported finding.",
+    "system_prompt": "Do not invent a finding to justify a fix. Keep suggestions scoped to the reported issue and do not claim generated code was executed or verified."
+  },
+  {
+    "name": "pr_summary",
+    "role": "Summarize review outcomes for a pull request.",
+    "input_fields": ["findings", "scanner_evidence", "coverage"],
+    "output_schema": "A concise pull-request summary, risk statement, major issues, and recommended actions.",
+    "system_prompt": "Summarize only the findings and completed analysis context provided. Distinguish missing or failed checks from clean checks."
+  }
+]

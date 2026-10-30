@@ -5,7 +5,7 @@ from pathlib import Path
 
 from .analyzer import analyze
 from .ai import analyze_with_ai
-from .pipeline import merge_summary
+from .pipeline import merge_ai_findings, merge_summary
 from .scanner import scan_source
 
 from .storage import fail_job, load_job, requeue_job, save_analysis, update_job_running
@@ -28,8 +28,13 @@ def _worker_environment() -> dict[str, str]:
         "AI_PROVIDER": os.getenv("AI_PROVIDER", ""),
         "AI_MODEL": os.getenv("AI_MODEL", ""),
         "AI_API_KEY": os.getenv("AI_API_KEY", ""),
-        "AI_BASE_URL": os.getenv("AI_BASE_URL", ""),
-        "AI_TIMEOUT_SECONDS": os.getenv("AI_TIMEOUT_SECONDS", "20"),
+        "AI_BASE_URL": os.getenv("AI_BASE_URL", "https://api.openai.com/v1"),
+        "AI_CONNECT_TIMEOUT_SECONDS": os.getenv("AI_CONNECT_TIMEOUT_SECONDS", "5"),
+        "AI_READ_TIMEOUT_SECONDS": os.getenv("AI_READ_TIMEOUT_SECONDS", "20"),
+        "AI_TOTAL_TIMEOUT_SECONDS": os.getenv("AI_TOTAL_TIMEOUT_SECONDS", os.getenv("AI_TIMEOUT_SECONDS", "45")),
+        "AI_TIMEOUT_SECONDS": os.getenv("AI_TIMEOUT_SECONDS", "45"),
+        "AI_MAX_ATTEMPTS": os.getenv("AI_MAX_ATTEMPTS", "2"),
+        "AI_MAX_RETRY_DELAY_SECONDS": os.getenv("AI_MAX_RETRY_DELAY_SECONDS", "1"),
         "AI_MAX_INPUT_BYTES": os.getenv("AI_MAX_INPUT_BYTES", "150000"),
         "AI_MAX_RESPONSE_BYTES": os.getenv("AI_MAX_RESPONSE_BYTES", "1000000"),
         "SEMGREP_SEND_METRICS": "off",
@@ -56,7 +61,7 @@ def run_job(job_id: str) -> None:
 
         findings = local_findings + [_scanner_finding(item) for item in scanner_run.findings]
         ai_outcome = analyze_with_ai(job["source"], job["filename"], job["language"], findings)
-        findings.extend(ai_outcome.findings)
+        findings = merge_ai_findings(findings, ai_outcome.findings)
         warnings = scanner_run.warnings + ([ai_outcome.warning] if ai_outcome.warning else [])
         coverage = {
             "local_evidence_rules": "completed",
@@ -65,6 +70,11 @@ def run_job(job_id: str) -> None:
             "ruff": "completed" if "ruff" in scanner_run.tools else ("not_applicable" if job["language"] != "python" else "skipped_or_failed"),
         }
         coverage["ai"] = "completed" if ai_outcome.summary else "skipped_or_failed"
+        coverage["ai_provider"] = ai_outcome.provider or ai_outcome.status
+        coverage["ai_model"] = ai_outcome.model or (
+            "not_configured" if ai_outcome.status == "not_configured" else "unavailable"
+        )
+        coverage["knowledge_retrieval"] = ai_outcome.knowledge_status
         save_analysis(job_id, findings, merge_summary(findings, ai_outcome.summary), scanner_run.tools, coverage, warnings, [{"scanner": name, "status": "completed" if name in scanner_run.tools else "skipped", "findings_count": sum(item.scanner == name for item in scanner_run.findings)} for name in ("semgrep", "bandit", "ruff")])
     except Exception as error:
         latest = load_job(job_id)
@@ -73,7 +83,7 @@ def run_job(job_id: str) -> None:
             requeue_job(job_id)
             run_job(job_id)
             return
-        fail_job(job_id, str(error))
+        fail_job(job_id, f"Analysis failed ({type(error).__name__})")
         raise
 
 
