@@ -1,7 +1,7 @@
 import logging
 import os
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 
@@ -11,17 +11,129 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from .ai.knowledge import KnowledgeRecord, retrieve_knowledge
 from .auth import auth_is_configured, current_user
 from .limits import enforce_instance_request_limit, enforce_review_quota
 from .module_loader import load_modules
 from .pipeline import REVIEWS, run_review
 from .schemas import ChatRequest, ChatResponse, Review, ReviewRequest
-from .storage import count_recent_reviews, create_review, delete_review, fail_job, get_job, get_review as get_stored_review, init_db, list_reviews
+from .storage import (
+    count_recent_reviews,
+    create_review,
+    delete_review,
+    fail_job,
+    get_job,
+    init_db,
+    list_reviews,
+)
+from .storage import get_review as get_stored_review
 from .worker import enqueue_job
-
 
 app = FastAPI(title="Secure Review", version="0.1.0")
 logger = logging.getLogger("secure_review.api")
+CHAT_HISTORY: dict[str, list[str]] = {}
+
+
+def _chat_tokens(value: str) -> set[str]:
+    return {token for token in re.findall(r"[A-Za-z0-9_]+", value.lower()) if len(token) > 2}
+
+
+def _rank_chat_findings(review: Review, message: str) -> list[dict[str, object]]:
+    question_tokens = _chat_tokens(message)
+    ranked: list[tuple[int, int, dict[str, object]]] = []
+    for finding in review.findings:
+        haystack = " ".join(filter(None, [finding.title, finding.category, finding.description, finding.evidence, finding.rule_id or ""]))
+        overlap = len(_chat_tokens(haystack) & question_tokens)
+        severity_weight = {
+            "critical": 5,
+            "high": 4,
+            "medium": 3,
+            "low": 2,
+            "info": 1,
+        }.get(finding.severity, 0)
+        keyword_hit = 1 if any(keyword in message.lower() for keyword in ("why", "danger", "risk", "exploit", "fix", "remedi", "owasp", "secure", "source", "finding")) else 0
+        score = overlap * 4 + severity_weight * 2 + keyword_hit
+        ranked.append((score, finding.line_start, {"finding": finding, "score": score}))
+    return [entry for _, _, entry in sorted(ranked, key=lambda item: (-item[0], item[1]))[:3]]
+
+
+def _build_chat_answer(review: Review, message: str) -> tuple[str, list[str]]:
+    history = CHAT_HISTORY.setdefault(review.id, [])
+    relevant = _rank_chat_findings(review, message)
+    selected = [entry["finding"] for entry in relevant]
+    if not selected:
+        selected = review.findings[:3]
+
+    question = message.lower()
+    finding_context = " ".join(
+        f"{finding.title} {finding.category} {finding.description} {finding.evidence}"
+        for finding in selected
+    )
+    knowledge: list[KnowledgeRecord] = []
+    knowledge_warning = ""
+    try:
+        knowledge = retrieve_knowledge(
+            f"{message}\n{finding_context}",
+            review.language,
+            selected,
+            limit=3,
+        )
+    except (OSError, TypeError, ValueError):
+        knowledge_warning = "Local knowledge retrieval is unavailable for this answer."
+
+    knowledge_sources = [f"knowledge:{record.id}" for record in knowledge]
+    guidance = next((record for record in knowledge if record.remediation or record.why_it_matters), None)
+    first = selected[0] if selected else None
+    if first and any(word in question for word in ("why", "danger", "risk", "exploit", "impact")):
+        explanation = first.description
+        if first.fix:
+            explanation = f"{explanation} The main risk is that {first.title.lower()} can let untrusted input influence execution or data handling, which increases the attack surface for abuse."
+        if guidance and guidance.why_it_matters:
+            explanation += f" Retrieved local guidance notes: {guidance.why_it_matters}"
+        answer = f"The most relevant finding is {first.title} ({first.severity}). {explanation}"
+    elif first and any(word in question for word in ("fix", "remedi", "correct", "patch")):
+        fix = first.fix
+        if fix:
+            answer = f"For {first.title}, the remediation is: {fix.explanation} Suggested code: {fix.corrected_code or 'No corrected snippet was provided.'}"
+        elif guidance and guidance.remediation:
+            answer = f"For {first.title}, retrieved local guidance recommends: {guidance.remediation}"
+        else:
+            answer = f"For {first.title}, review the finding description and narrow the risky input path before changing the code."
+    elif any(word in question for word in ("owasp", "secure", "best practice")):
+        if guidance:
+            subject = first.title if first else "this question"
+            answer = f"For {subject}, retrieved local guidance ({guidance.title}) says: {guidance.remediation or guidance.why_it_matters}"
+        else:
+            answer = "No matching local secure-coding guidance was retrieved. A clean retrieval is not evidence that the question has no security implications."
+    else:
+        if selected:
+            summary = "; ".join(f"{finding.title} ({finding.severity})" for finding in selected)
+            answer = f"The review shows {len(review.findings)} finding(s), with the most relevant ones being {summary}. Ask about a specific issue, its impact, or its remediation guidance."
+        elif guidance:
+            answer = f"Retrieved local guidance ({guidance.title}) says: {guidance.remediation or guidance.why_it_matters}"
+        else:
+            answer = "This review has no findings to provide context. That is not a guarantee of safety; ask about a specific secure-coding practice."
+
+    if guidance and guidance.remediation and guidance.remediation not in answer:
+        answer += f" Related local remediation guidance: {guidance.remediation}"
+    if knowledge_warning:
+        answer += f" {knowledge_warning}"
+    elif knowledge:
+        answer += " Retrieved guidance is local synthetic data, not authoritative security advice."
+
+    if history:
+        follow_up = history[-1]
+        answer = f"Following up from your last question, {answer} Earlier, you asked: {follow_up}"
+    history.append(message)
+    if len(history) > 5:
+        history[:] = history[-5:]
+
+    sources = list(dict.fromkeys([
+        ref
+        for finding in selected
+        for ref in ((finding.fix.references if finding.fix else []) + ([finding.rule_id] if finding.rule_id else []) + [finding.id])
+    ] + knowledge_sources))
+    return answer, sources
 
 
 def allowed_origins() -> list[str]:
@@ -214,7 +326,7 @@ def create_secure_review(request: ReviewRequest, user_id: str = Depends(current_
         raise HTTPException(status_code=503, detail="Review processing is disabled")
     try:
         ensure_db()
-        since = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+        since = (datetime.now(UTC) - timedelta(days=1)).isoformat()
         enforce_review_quota(count_recent_reviews(user_id, since))
         review_id, job_id = create_review(user_id, request.code, request.filename)
         try:
@@ -287,14 +399,8 @@ def chat(request: ChatRequest) -> ChatResponse:
     review = REVIEWS.get(request.review_id)
     if review is None:
         raise HTTPException(status_code=404, detail="Review not found")
-    message = request.message.lower()
-    if "why" in message or "fix" in message or "remediat" in message:
-        answer = "This local assistant can explain findings returned by the evidence-backed review. " + " ".join(
-            f"{finding.title}: {finding.description}" for finding in review.findings[:3]
-        )
-    else:
-        answer = "Ask about one of the flagged findings, its evidence, or its remediation guidance."
-    return ChatResponse(answer=answer, sources=[reference for finding in review.findings for reference in (finding.fix.references if finding.fix else [])])
+    answer, sources = _build_chat_answer(review, request.message)
+    return ChatResponse(answer=answer, sources=sources)
 
 
 @app.get("/", include_in_schema=False)

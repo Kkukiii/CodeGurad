@@ -1,8 +1,8 @@
-import json
 import ipaddress
+import json
 import os
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 from typing import Protocol
 from urllib.parse import urlsplit
@@ -30,6 +30,14 @@ class ProviderRequestError(RuntimeError):
         self.kind = kind
         self.retryable = retryable
         self.retry_after = retry_after
+
+
+def ai_configuration_status() -> dict[str, bool]:
+    return {
+        "ai_provider_configured": bool(os.getenv("AI_PROVIDER", "").strip()),
+        "ai_model_configured": bool(os.getenv("AI_MODEL", "").strip()),
+        "ai_api_key_configured": bool(os.getenv("AI_API_KEY", "").strip()),
+    }
 
 
 def _positive_float(name: str, default: str, maximum: float) -> float:
@@ -61,8 +69,8 @@ def _retry_after(value: str | None) -> float | None:
         try:
             retry_at = parsedate_to_datetime(value)
             if retry_at.tzinfo is None:
-                retry_at = retry_at.replace(tzinfo=timezone.utc)
-            return max(0.0, (retry_at - datetime.now(timezone.utc)).total_seconds())
+                retry_at = retry_at.replace(tzinfo=UTC)
+            return max(0.0, (retry_at - datetime.now(UTC)).total_seconds())
         except (TypeError, ValueError, OverflowError):
             return None
 
@@ -92,7 +100,7 @@ class OpenAICompatibleProvider:
             )
         self.model = model
         self.api_key = api_key
-        self.base_url = normalized_url
+        self.base_url = normalized_url.removesuffix("/chat/completions").rstrip("/")
         self.connect_timeout = _positive_float("AI_CONNECT_TIMEOUT_SECONDS", "5", 60)
         self.read_timeout = _positive_float("AI_READ_TIMEOUT_SECONDS", "20", 60)
         self.total_timeout = _positive_float(
@@ -205,10 +213,18 @@ def configured_provider() -> AIProvider | None:
     if not any(supplied):
         return None
     if not all(supplied):
-        raise ProviderConfigurationError("AI_PROVIDER, AI_MODEL, and AI_API_KEY must be configured together")
+        missing = [
+            name for name, value in (
+                ("AI_PROVIDER", provider),
+                ("AI_MODEL", model),
+                ("AI_API_KEY", api_key),
+            )
+            if not value
+        ]
+        raise ProviderConfigurationError(f"{', '.join(missing)} must be configured")
     if len(model) > 200 or len(api_key) > 4096:
         raise ProviderConfigurationError("AI provider configuration exceeds its allowed length")
     if provider not in {"openai", "openai-compatible"}:
-        raise ProviderConfigurationError("AI_PROVIDER is unsupported")
+        raise ProviderConfigurationError("AI_PROVIDER must be openai or openai-compatible")
     base_url = os.getenv("AI_BASE_URL", "https://api.openai.com/v1").strip()
     return OpenAICompatibleProvider(model, api_key, base_url)

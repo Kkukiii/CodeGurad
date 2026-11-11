@@ -31,13 +31,20 @@ def _prompt(
     knowledge: list[KnowledgeRecord] | None = None,
 ) -> str:
     evidence = [{
+        "agent": finding.agent,
+        "category": finding.category,
         "scanner": finding.scanner,
         "rule_id": finding.rule_id,
+        "cwe": finding.cwe,
+        "owasp_id": finding.owasp_id,
         "severity": finding.severity,
         "line_start": finding.line_start,
         "line_end": finding.line_end,
         "title": finding.title,
+        "description": finding.description,
         "evidence": finding.evidence,
+        "confidence": finding.confidence,
+        "provenance": finding.provenance,
     } for finding in evidence_findings or []]
     modules = [{
         "name": module.name,
@@ -71,7 +78,7 @@ RETRIEVED_KNOWLEDGE_JSON:
 
 def _json_content(response: str) -> object:
     if not isinstance(response, str):
-        raise ValueError("AI response must be JSON text")
+        raise TypeError("AI response must be JSON text")
     return json.loads(response)
 
 
@@ -126,14 +133,39 @@ def _summary(result: AIReviewEnvelope) -> ReviewSummary:
     )
 
 
-def analyze_with_ai(code: str, filename: str, language: str, evidence_findings: list[Finding] | None = None) -> AIOutcome:
+def analyze_with_ai(
+    code: str,
+    filename: str,
+    language: str,
+    evidence_findings: list[Finding] | None = None,
+    *,
+    retrieved_knowledge: list[KnowledgeRecord] | None = None,
+    retrieval_status: str | None = None,
+) -> AIOutcome:
     provider_name: str | None = None
     model_name: str | None = None
     knowledge_status = "unavailable"
+    knowledge_warning: str | None = None
     try:
+        if retrieved_knowledge is None:
+            try:
+                knowledge = retrieve_knowledge(code, language, evidence_findings)
+            except (OSError, TypeError, ValueError):
+                knowledge = []
+                knowledge_status = "unavailable"
+                knowledge_warning = "Knowledge retrieval was unavailable; AI analysis ran without retrieved records."
+            else:
+                knowledge_status = "completed" if knowledge else "no_matches"
+        else:
+            knowledge = retrieved_knowledge
+            knowledge_status = retrieval_status or ("completed" if knowledge else "no_matches")
+
         provider = configured_provider()
         if provider is None:
-            return AIOutcome([], None, "AI coverage skipped_or_failed: provider, model, or API key is not configured.")
+            warning = "AI coverage skipped_or_failed: AI_PROVIDER, AI_MODEL, and AI_API_KEY are not configured."
+            if knowledge_warning:
+                warning = f"{warning} {knowledge_warning}"
+            return AIOutcome([], None, warning, knowledge_status=knowledge_status)
         provider_name = getattr(provider, "provider_name", "configured")
         model_name = getattr(provider, "model", None)
         agents = {module.name for module in load_modules() if module.enabled}
@@ -142,16 +174,8 @@ def analyze_with_ai(code: str, filename: str, language: str, evidence_findings: 
             return AIOutcome(
                 [], None, "AI coverage skipped_or_failed: required agent configuration is incomplete.",
                 status="failed", provider=provider_name, model=model_name,
+                knowledge_status=knowledge_status,
             )
-        try:
-            knowledge = retrieve_knowledge(code, language, evidence_findings)
-        except (OSError, TypeError, ValueError):
-            knowledge = []
-            knowledge_status = "unavailable"
-            knowledge_warning = "Knowledge retrieval was unavailable; AI analysis ran without retrieved records."
-        else:
-            knowledge_status = "completed" if knowledge else "no_matches"
-            knowledge_warning = None
         prompt = _prompt(code, filename, language, evidence_findings, knowledge)
         max_input_bytes = max(1024, int(os.getenv("AI_MAX_INPUT_BYTES", "150000")))
         if len(prompt.encode("utf-8")) > max_input_bytes:
@@ -170,9 +194,9 @@ def analyze_with_ai(code: str, filename: str, language: str, evidence_findings: 
             model=model_name,
             knowledge_status=knowledge_status,
         )
-    except ProviderConfigurationError:
+    except ProviderConfigurationError as error:
         return AIOutcome(
-            [], None, "AI coverage skipped_or_failed: provider configuration is incomplete or invalid.",
+            [], None, f"AI coverage skipped_or_failed: provider configuration is invalid ({error}).",
             status="invalid_configuration", provider=provider_name, model=model_name,
             knowledge_status=knowledge_status,
         )

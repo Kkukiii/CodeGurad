@@ -17,3 +17,5 @@ coverage/
 # Local databases and runtime data
 *.sqlite3
 *.db
+
+keys

@@ -2,13 +2,13 @@ import json
 import math
 import re
 from collections import Counter
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..schemas import Finding
-
 
 _TOKEN = re.compile(r"[A-Z]{2,}(?=[A-Z][a-z]|\b)|[A-Z]?[a-z]+|\d+")
 _STOP_WORDS = {
@@ -39,12 +39,20 @@ class KnowledgeRecord(BaseModel):
     rag_keywords: list[str] = Field(default_factory=list)
 
 
+@dataclass(frozen=True)
+class KnowledgeRetrievalOutcome:
+    records: list[KnowledgeRecord]
+    status: Literal["completed", "skipped_or_failed"]
+    detail: str
+    warning: str | None = None
+
+
 def load_knowledge(path: Path | None = None) -> list[KnowledgeRecord]:
     source = path or Path(__file__).parents[2] / "knowledge base" / "ai_modules.json"
     payload = json.loads(source.read_text(encoding="utf-8"))
     records = payload.get("records") if isinstance(payload, dict) else None
     if not isinstance(records, list):
-        raise ValueError("Knowledge base must contain a records array")
+        raise TypeError("Knowledge base must contain a records array")
     return [KnowledgeRecord.model_validate(record) for record in records]
 
 
@@ -126,3 +134,26 @@ def retrieve_knowledge(
 
     ranked.sort(key=lambda result: (-result[0], result[1]))
     return [record for _, _, record in ranked[:limit]]
+
+
+def retrieve_knowledge_for_review(
+    code: str,
+    language: str,
+    findings: list[Finding] | None = None,
+    *,
+    path: Path | None = None,
+) -> KnowledgeRetrievalOutcome:
+    try:
+        records = retrieve_knowledge(code, language, findings, path=path)
+    except FileNotFoundError:
+        return KnowledgeRetrievalOutcome(
+            [], "skipped_or_failed", "knowledge base file is missing",
+            "Knowledge retrieval skipped_or_failed: bundled knowledge base file is missing.",
+        )
+    except (OSError, TypeError, ValueError):
+        return KnowledgeRetrievalOutcome(
+            [], "skipped_or_failed", "knowledge base could not be loaded or validated",
+            "Knowledge retrieval skipped_or_failed: bundled knowledge base could not be loaded or validated.",
+        )
+    detail = "matched" if records else "no matching records"
+    return KnowledgeRetrievalOutcome(records, "completed", detail)

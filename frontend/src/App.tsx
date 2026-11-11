@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
+import {
+  Activity, ArrowDownToLine, ArrowRight, Bot, Check, ChevronDown, CircleAlert,
+  CircleCheck, Clock3, Code2, Copy, FileCode2, FileText, History, LayoutDashboard,
+  LockKeyhole, Menu, Search, Settings, Shield, ShieldAlert,
+  ShieldCheck, Sparkles, Upload, X,
+} from "lucide-react";
 import { supabase } from "./supabase";
 import { ApiError, createApiClient } from "./api";
 import { readSourceFile, validateSource } from "./validation";
@@ -8,14 +14,31 @@ import type { Finding, Review, ReviewStatus } from "./types";
 const api = createApiClient(supabase);
 
 type AuthMode = "signin" | "signup" | "reset";
-type View = "overview" | "new" | "history" | "findings" | "detail" | "account";
+type View = "overview" | "new" | "history" | "findings" | "detail" | "account" | "reports" | "assistant" | "settings";
 type WorkspaceSection = "editor" | "quick";
 type SourceLanguage = "python" | "java";
 type Theme = "light" | "dark";
 type SeverityFilter = "all" | Finding["severity"];
 type FindingSort = "priority" | "newest" | "title";
+type ReviewStatusFilter = "all" | ReviewStatus;
 
 const severityOrder: Finding["severity"][] = ["critical", "high", "medium", "low", "info"];
+const severityWeights: Record<Finding["severity"], number> = { critical: 25, high: 15, medium: 8, low: 4, info: 1 };
+const coverageStages = ["local_evidence_rules", "semgrep", "bandit", "ruff", "ai", "knowledge_retrieval"] as const;
+const navItems = [
+  { view: "overview", label: "Overview", Icon: LayoutDashboard },
+  { view: "new", label: "Code Review", Icon: Code2 },
+  { view: "findings", label: "Findings", Icon: ShieldAlert },
+  { view: "reports", label: "Reports", Icon: FileText },
+  { view: "assistant", label: "AI Assistant", Icon: Bot },
+  { view: "settings", label: "Settings", Icon: Settings },
+] as const;
+
+function computeCodeHealthScore(findings: Finding[]): number {
+  if (findings.length === 0) return 100;
+  const penalty = findings.reduce((total, finding) => total + (severityWeights[finding.severity] ?? 0), 0);
+  return Math.max(0, Math.min(100, 100 - penalty));
+}
 
 const starterCode: Record<SourceLanguage, string> = {
   python: "from flask import request\n\ndef lookup():\n    user_id = request.args['id']\n    return user_id\n",
@@ -90,6 +113,24 @@ function FindingCard({ finding }: { finding: Finding }) {
   </article>;
 }
 
+function CopyControl({ value, label }: { value: string; label: string }) {
+  const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState("");
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setCopyError("");
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopyError("Clipboard access is unavailable in this browser.");
+    }
+  }
+
+  return <span className="copy-control"><button className="icon-button" type="button" onClick={() => void copy()} aria-label={`Copy ${label}`} title={`Copy ${label}`}>{copied ? <Check size={14} /> : <Copy size={14} />}</button>{copyError && <small role="status">{copyError}</small>}</span>;
+}
+
 function formatReviewDate(value: string | null): string {
   if (!value) return "Time unavailable";
   const date = new Date(value);
@@ -121,22 +162,28 @@ function OverviewDashboard({
   const highRiskCount = severityCounts.filter(({ severity }) => severity === "critical" || severity === "high")
     .reduce((total, item) => total + item.count, 0);
   const runningCount = reviews.filter(review => review.status === "queued" || review.status === "running").length;
+  const codeHealthScore = computeCodeHealthScore(findings.map(({ finding }) => finding));
+  const latestReview = reviews[0];
+  const latestCoverage = coverageStages.map(stage => ({
+    stage,
+    status: latestReview?.coverage[stage] ?? "not reported",
+  }));
 
   return <section className="overview">
     <div className="page-heading overview-heading">
-      <div><div className="eyebrow">Security workspace</div><h1>Overview</h1><p className="page-description">A live view of reviews and findings in your account.</p></div>
-      <button className="primary-button" onClick={onNewReview}>Start a review <span aria-hidden="true">↗</span></button>
+      <div><div className="eyebrow">Workspace / Overview</div><h1>Overview</h1><p className="page-description">Risk, review activity, and analysis coverage from your account.</p></div>
+      <button className="primary-button" onClick={onNewReview}><Code2 size={16} /> New code review <ArrowRight size={15} /></button>
     </div>
-    {loading ? <div className="loading-panel" role="status">Loading your review history…</div> : loadError ? <div className="empty-state" role="alert"><strong>Dashboard data could not be loaded</strong><p>{loadError}</p><button className="secondary-button" onClick={onRetry}>Retry</button></div> : <>
-      <div className="metrics-grid" aria-label="Review metrics">
-        <article className="metric-card"><span className="metric-label">Total reviews</span><strong>{reviews.length}</strong><span className="metric-note">In your account</span></article>
-        <article className="metric-card"><span className="metric-label">Reported findings</span><strong>{findings.length}</strong><span className="metric-note">Across available reviews</span></article>
-        <article className="metric-card"><span className="metric-label">Critical + high</span><strong>{highRiskCount}</strong><span className="metric-note">Potential or informational evidence included</span></article>
-        <article className="metric-card"><span className="metric-label">In progress</span><strong>{runningCount}</strong><span className="metric-note">Queued or running jobs</span></article>
+    {loading ? <div className="overview-skeleton" role="status" aria-label="Loading your review history"><span>Loading your review history…</span><div className="skeleton-metrics">{Array.from({ length: 6 }, (_, index) => <i key={index} />)}</div><div className="skeleton-panels"><i /><i /></div></div> : loadError ? <div className="empty-state" role="alert"><strong>Dashboard data could not be loaded</strong><p>{loadError}</p><button className="secondary-button" onClick={onRetry}>Retry</button></div> : <>
+      <div className="metrics-grid" aria-label="Security metrics">
+        <article className="metric-card metric-health"><span className="metric-label"><ShieldCheck size={15} /> Code health</span><strong>{codeHealthScore}<small>/100</small></strong><span className="metric-note">Deterministic indicator · not proof of security</span></article>
+        <article className="metric-card"><span className="metric-label"><Activity size={15} /> Total findings</span><strong>{findings.length}</strong><span className="metric-note">Across {reviews.length} persisted reviews</span></article>
+        {severityCounts.slice(0, 4).map(({ severity, count }) => <article className={`metric-card metric-${severity}`} key={severity}><span className="metric-label"><span className={`metric-dot severity-${severity}`} />{severity} severity</span><strong>{count}</strong><span className="metric-note">{severity === "critical" || severity === "high" ? "Requires priority review" : "Recorded in your history"}</span></article>)}
       </div>
+      <p className="score-formula">Score formula: 100 − (25 × critical + 15 × high + 8 × medium + 4 × low + 1 × info), clamped to 0–100.</p>
       <div className="overview-grid">
         <section className="panel severity-panel" aria-label="Findings by severity">
-          <div className="panel-heading"><div><span className="eyebrow">Current inventory</span><h2>Findings by severity</h2></div><button className="text-button" onClick={onShowHistory}>Review history</button></div>
+          <div className="panel-heading"><div><span className="eyebrow">Current inventory</span><h2>Severity distribution</h2></div><button className="text-button" onClick={onShowHistory}>Review history <ArrowRight size={14} /></button></div>
           <div className="severity-chart">{severityCounts.map(({ severity, count }) => {
             const percent = findings.length ? Math.round((count / findings.length) * 100) : 0;
             return <div className="severity-row" key={severity}>
@@ -147,17 +194,24 @@ function OverviewDashboard({
           })}</div>
         </section>
         <section className="panel activity-panel">
-          <div className="panel-heading"><div><span className="eyebrow">Persisted results</span><h2>Recent reviews</h2></div><button className="text-button" onClick={onShowHistory}>View all</button></div>
+          <div className="panel-heading"><div><span className="eyebrow">Persisted results</span><h2>Recent review activity</h2></div><button className="text-button" onClick={onShowHistory}>View all <ArrowRight size={14} /></button></div>
           {reviews.length === 0 ? <div className="compact-empty"><strong>No reviews yet</strong><p>Submit a Python or Java source file to see real review activity here.</p><button className="secondary-button" onClick={onNewReview}>Create first review</button></div> :
             <div className="activity-list">{reviews.slice(0, 5).map(review => <button className="activity-row" key={review.id} onClick={() => onSelectReview(review.id)}>
-              <span className="activity-icon" aria-hidden="true">⌘</span>
+              <span className="activity-icon" aria-hidden="true"><FileCode2 size={16} /></span>
               <span className="activity-main"><strong>{review.filename}</strong><small>{review.language} · {review.findings.length} findings · {formatReviewDate(review.created_at)}</small></span>
               <StatusPill status={review.status} />
             </button>)}</div>}
         </section>
       </div>
+      <section className="panel coverage-overview">
+        <div className="panel-heading"><div><span className="eyebrow">Latest analysis</span><h2>Scanner & AI coverage</h2></div>{latestReview && <StatusPill status={latestReview.status} />}</div>
+        {!latestReview ? <div className="compact-empty"><strong>Coverage appears after your first review</strong><p>Tool status is reported from each real analysis. No scanner or AI coverage is assumed before a review runs.</p></div> : <>
+          <div className="coverage-grid">{latestCoverage.map(({ stage, status }) => <div className="coverage-item" key={stage}><span className={`coverage-indicator coverage-${status.replaceAll("_", "-")}`}>{status === "completed" ? <CircleCheck size={15} /> : status === "not_applicable" ? <CircleAlert size={15} /> : <Clock3 size={15} />}</span><span><b>{stage.replaceAll("_", " ")}</b><small>{status.replaceAll("_", " ")}</small></span></div>)}</div>
+          {latestReview.summary.pr_summary && <div className="latest-summary"><span className="eyebrow">Latest summary · {latestReview.filename}</span><p>{latestReview.summary.pr_summary}</p></div>}
+        </>}
+      </section>
       <section className="panel recent-findings-panel">
-        <div className="panel-heading"><div><span className="eyebrow">Evidence-led results</span><h2>Recent findings</h2></div><button className="text-button" onClick={onShowHistory}>Browse reviews</button></div>
+        <div className="panel-heading"><div><span className="eyebrow">Evidence-led results</span><h2>Latest findings</h2></div><button className="text-button" onClick={onShowHistory}>Browse reviews <ArrowRight size={14} /></button></div>
         {findings.length === 0 ? <div className="compact-empty"><strong>No findings in available reviews</strong><p>Findings will appear here after an analysis completes. A clean result is not a guarantee of safety.</p></div> :
           <div className="recent-finding-list">{findings.slice(0, 5).map(({ finding, review }) => <button className="recent-finding-row" key={`${review.id}:${finding.id}`} onClick={() => onSelectReview(review.id)}>
             <span className={`severity severity-${finding.severity}`}>{finding.severity}</span>
@@ -183,12 +237,21 @@ function FindingsWorkspace({
 }) {
   const [query, setQuery] = useState("");
   const [severity, setSeverity] = useState<SeverityFilter>("all");
+  const [category, setCategory] = useState("all");
+  const [file, setFile] = useState("all");
+  const [status, setStatus] = useState<ReviewStatusFilter>("all");
   const [sort, setSort] = useState<FindingSort>("priority");
+  const [activeFindingId, setActiveFindingId] = useState<string | null>(null);
   const indexedFindings = reviews.flatMap(review => review.findings.map(finding => ({ finding, review })));
+  const categories = Array.from(new Set(indexedFindings.map(({ finding }) => finding.category))).sort((left, right) => left.localeCompare(right));
+  const files = Array.from(new Set(indexedFindings.map(({ review }) => review.filename))).sort((left, right) => left.localeCompare(right));
   const filteredFindings = indexedFindings.filter(({ finding, review }) => {
     const matchesSeverity = severity === "all" || finding.severity === severity;
+    const matchesCategory = category === "all" || finding.category === category;
+    const matchesFile = file === "all" || review.filename === file;
+    const matchesStatus = status === "all" || review.status === status;
     const searchable = [finding.title, finding.description, finding.category, finding.scanner, finding.rule_id ?? "", finding.cwe ?? "", review.filename].join(" ").toLowerCase();
-    return matchesSeverity && searchable.includes(query.trim().toLowerCase());
+    return matchesSeverity && matchesCategory && matchesFile && matchesStatus && searchable.includes(query.trim().toLowerCase());
   });
   const sortedFindings = [...filteredFindings].sort((left, right) => {
     if (sort === "newest") {
@@ -197,14 +260,27 @@ function FindingsWorkspace({
     if (sort === "title") return left.finding.title.localeCompare(right.finding.title);
     return severityOrder.indexOf(left.finding.severity) - severityOrder.indexOf(right.finding.severity);
   });
+  const activeFinding = indexedFindings.find(({ finding }) => finding.id === activeFindingId) ?? null;
 
   return <section className="findings-workspace">
-    <div className="page-heading"><div><div className="eyebrow">Evidence inventory</div><h1>Findings</h1><p className="page-description">Search and filter findings from your persisted reviews.</p></div></div>
+    <div className="page-heading"><div><div className="eyebrow">Security inventory</div><h1>Findings</h1><p className="page-description">Investigate evidence from your persisted reviews and open the source review for full context.</p></div><span className="result-count">{filteredFindings.length} / {indexedFindings.length} findings</span></div>
     <div className="filter-toolbar">
-      <label className="search-field">Search findings<input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Title, file, scanner, CWE…" /></label>
+      <label className="search-field"><span><Search size={14} /> Search findings</span><input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Title, file, scanner, CWE…" /></label>
       <label className="severity-filter">Severity<select value={severity} onChange={event => setSeverity(event.target.value as SeverityFilter)}>
         <option value="all">All severities</option>
         {severityOrder.map(value => <option value={value} key={value}>{value === "info" ? "Informational" : value[0].toUpperCase() + value.slice(1)}</option>)}
+      </select></label>
+      <label className="category-filter">Category<select value={category} onChange={event => setCategory(event.target.value)}>
+        <option value="all">All categories</option>
+        {categories.map(value => <option value={value} key={value}>{value}</option>)}
+      </select></label>
+      <label className="file-filter">File<select value={file} onChange={event => setFile(event.target.value)}>
+        <option value="all">All files</option>
+        {files.map(value => <option value={value} key={value}>{value}</option>)}
+      </select></label>
+      <label className="status-filter">Review status<select value={status} onChange={event => setStatus(event.target.value as ReviewStatusFilter)}>
+        <option value="all">All statuses</option>
+        {["queued", "running", "completed", "completed-with-warnings", "failed"].map(value => <option value={value} key={value}>{statusLabel(value as ReviewStatus)}</option>)}
       </select></label>
       <label className="sort-filter">Sort by<select value={sort} onChange={event => setSort(event.target.value as FindingSort)}>
         <option value="priority">Severity priority</option>
@@ -215,12 +291,41 @@ function FindingsWorkspace({
     {loading ? <div className="loading-panel" role="status">Loading findings…</div> : loadError ? <div className="empty-state" role="alert"><strong>Findings could not be loaded</strong><p>{loadError}</p><button className="secondary-button" onClick={onRetry}>Retry</button></div> : sortedFindings.length === 0 ?
       <div className="empty-state"><strong>{indexedFindings.length ? "No findings match these filters" : "No findings available"}</strong><p>{indexedFindings.length ? "Change your search or severity filter." : "Submit a review to populate this inventory with actual results."}</p></div> :
       <div className="findings-list" aria-label={`${filteredFindings.length} findings`}>
-        {sortedFindings.map(({ finding, review }) => <button className="finding-list-row" key={`${review.id}:${finding.id}`} onClick={() => onSelectReview(review.id)}>
+        <div className="finding-table-header"><span>Finding</span><span>Severity</span><span>File / location</span><span>References</span><span>Status</span><span /></div>
+        {sortedFindings.map(({ finding, review }) => <button className={`finding-list-row ${activeFindingId === finding.id ? "finding-row-active" : ""}`} key={`${review.id}:${finding.id}`} onClick={() => setActiveFindingId(finding.id)} aria-pressed={activeFindingId === finding.id}>
+          <span className="finding-list-main"><strong>{finding.title}</strong><small>{finding.category} · {finding.scanner}</small></span>
           <span className={`severity severity-${finding.severity}`}>{finding.severity}</span>
-          <span className="finding-list-main"><strong>{finding.title}</strong><small>{review.filename} · {finding.scanner} · line {finding.line_start}{finding.line_end !== finding.line_start ? `-${finding.line_end}` : ""}</small><span>{finding.description}</span></span>
-          <span className={`classification classification-${finding.classification}`}>{finding.classification}</span>
+          <span className="finding-location"><b>{review.filename}</b><small>Line {finding.line_start}{finding.line_end !== finding.line_start ? `–${finding.line_end}` : ""}</small></span>
+          <span className="finding-references">{finding.cwe && <small>{finding.cwe}</small>}{finding.owasp_id && <small>{finding.owasp_id}</small>}{!finding.cwe && !finding.owasp_id && <small>—</small>}</span>
+          <StatusPill status={review.status} />
+          <ArrowRight className="row-arrow" size={15} />
         </button>)}
       </div>}
+    {activeFinding && <FindingDetails finding={activeFinding.finding} review={activeFinding.review} onOpenReview={() => onSelectReview(activeFinding.review.id)} onClose={() => setActiveFindingId(null)} />}
+  </section>;
+}
+
+function FindingDetails({ finding, review, onOpenReview, onClose }: {
+  finding: Finding;
+  review: Review;
+  onOpenReview: () => void;
+  onClose: () => void;
+}) {
+  return <section className="finding-details panel" aria-label={`Details for ${finding.title}`}>
+    <div className="panel-heading"><div><span className="eyebrow">Finding detail · {review.filename}</span><h2>{finding.title}</h2></div><button className="icon-button" onClick={onClose} aria-label="Close finding details"><X size={16} /></button></div>
+    <div className="finding-detail-grid">
+      <div className="finding-detail-main">
+        <div className="finding-head"><span className={`severity severity-${finding.severity}`}>{finding.severity}</span><span className={`classification classification-${finding.classification}`}>{finding.classification}</span><span className="location">Lines {finding.line_start}{finding.line_end !== finding.line_start ? `–${finding.line_end}` : ""}</span></div>
+        <p>{finding.description}</p>
+        <div className="code-block-heading"><span>Affected code</span><CopyControl value={finding.evidence || ""} label="evidence" /></div>
+        <pre>{finding.evidence || "No source excerpt was returned by the analyzer."}</pre>
+        {finding.fix && <><div className="code-block-heading remediation-heading"><span>Recommended remediation</span>{finding.fix.corrected_code && <CopyControl value={finding.fix.corrected_code} label="corrected code" />}</div><p>{finding.fix.explanation}</p>{finding.fix.corrected_code ? <pre>{finding.fix.corrected_code}</pre> : <p className="muted">No corrected code example was supplied for this finding.</p>}{finding.fix.references.length > 0 && <p className="references">References: {finding.fix.references.join(" · ")}</p>}</>}
+      </div>
+      <aside className="finding-detail-meta">
+        <dl><div><dt>Category</dt><dd>{finding.category}</dd></div><div><dt>Source</dt><dd>{finding.provenance.length ? finding.provenance.join(" · ") : finding.scanner}</dd></div><div><dt>Confidence</dt><dd>{Math.round(finding.confidence * 100)}%</dd></div><div><dt>CWE</dt><dd>{finding.cwe ?? "Not mapped"}</dd></div><div><dt>OWASP</dt><dd>{finding.owasp_id ?? "Not mapped"}</dd></div><div><dt>Review status</dt><dd>{statusLabel(review.status)}</dd></div></dl>
+        <button className="secondary-button" onClick={onOpenReview}>Open full review <ArrowRight size={14} /></button>
+      </aside>
+    </div>
   </section>;
 }
 
@@ -246,10 +351,80 @@ function ReviewDetail({ review, onDeleted, onError }: { review: Review; onDelete
     <div className="detail-top"><div><div className="eyebrow">AI Review / {review.filename}</div><h2>{review.filename}</h2><p className="muted">{review.language} · {review.lines} lines · {review.tools.length ? review.tools.join(", ") : "Local evidence rules; no external scanners available"}</p></div><div className="detail-actions"><StatusPill status={review.status} /><button className="quiet-button" onClick={deleteReview} disabled={deleting}>{deleting ? "Deleting..." : "Delete review"}</button></div></div>
     {review.warnings.length > 0 && <div className="warning-box"><strong>Coverage notes</strong>{review.warnings.map(warning => <p key={warning}>{warning}</p>)}</div>}
     <div className="coverage-panel" aria-label="Analysis coverage">{Object.entries(review.coverage).map(([name, value]) => <span key={name}><b>{name.replaceAll("_", " ")}</b>: {value}</span>)}</div>
-    <div className="summary-grid"><div className={`verdict verdict-${review.summary.verdict}`}><span className="eyebrow">Review verdict</span><strong>{review.summary.verdict.replace("_", " ")}</strong><p>{review.summary.top_risks.length ? review.summary.top_risks.join(" · ") : "No top risks returned."}</p>{review.summary.score != null && <small>AI score: {review.summary.score}/100</small>}</div><div className="counts-panel"><span className="eyebrow">Severity breakdown</span><div className="count-row">{Object.entries(review.summary.counts).map(([severity, count]) => <span key={severity}><b>{count}</b>{severity}</span>)}</div></div></div>
+    <div className="summary-grid"><div className={`verdict verdict-${review.summary.verdict}`}><span className="eyebrow">Review verdict</span><strong>{review.summary.verdict.replace("_", " ")}</strong><p>{review.summary.top_risks.length ? review.summary.top_risks.join(" · ") : "No top risks returned."}</p>{review.summary.score != null && <small>AI score: {review.summary.score}/100</small>}</div><div className="counts-panel"><span className="eyebrow">Severity breakdown</span><div className="count-row">{Object.entries(review.summary.counts).map(([severity, count]) => <span key={severity}><b>{count}</b>{severity}</span>)}</div></div><div className="counts-panel"><span className="eyebrow">Code health</span><strong>{computeCodeHealthScore(review.findings)}/100</strong><small>Deterministic formula: 100 - 25×critical - 15×high - 8×medium - 4×low - 1×info (min 0)</small></div></div>
     {review.summary.pr_summary && <div className="summary-note"><strong>PR summary</strong><p>{review.summary.pr_summary}</p>{review.summary.security_risk && <p><b>Security risk:</b> {review.summary.security_risk}</p>}{(review.summary.recommended_actions?.length ?? 0) > 0 && <p><b>Recommended actions:</b> {review.summary.recommended_actions?.join(" · ")}</p>}</div>}
     {review.findings.length === 0 ? <div className="empty-state"><strong>No findings returned.</strong><p>This is not a guarantee of safety. Review coverage: {Object.entries(review.coverage).map(([key, value]) => `${key} ${value}`).join(" · ") || "not reported"}.</p></div> : <div className="finding-list"><div className="section-heading"><h2>Findings</h2><span>{review.findings.length} reported</span></div>{review.findings.map(finding => <FindingCard finding={finding} key={finding.id} />)}</div>}
   </div>;
+}
+
+function ReportsWorkspace({ reviews, loading, loadError, onRetry }: {
+  reviews: Review[];
+  loading: boolean;
+  loadError: string;
+  onRetry: () => void;
+}) {
+  const [reviewId, setReviewId] = useState(reviews[0]?.id ?? "");
+  const activeReview = reviews.find(review => review.id === reviewId) ?? reviews[0] ?? null;
+  const counts = severityOrder.map(severity => ({
+    severity,
+    count: activeReview?.findings.filter(finding => finding.severity === severity).length ?? 0,
+  }));
+  const securityCount = activeReview?.findings.filter(finding => finding.agent === "security").length ?? 0;
+  const qualityCount = (activeReview?.findings.length ?? 0) - securityCount;
+
+  useEffect(() => {
+    if (!reviews.some(review => review.id === reviewId) && reviews[0]) setReviewId(reviews[0].id);
+  }, [reviews, reviewId]);
+
+  return <section className="reports-workspace">
+    <div className="page-heading"><div><div className="eyebrow">Reporting</div><h1>Review reports</h1><p className="page-description">Executive summary and evidence from an existing review. Report content is derived only from persisted analysis results.</p></div><button className="secondary-button" onClick={() => window.print()} disabled={!activeReview}><ArrowDownToLine size={15} /> Print / save report</button></div>
+    {loading ? <div className="loading-panel" role="status">Loading report data…</div> : loadError ? <div className="empty-state" role="alert"><strong>Report data could not be loaded</strong><p>{loadError}</p><button className="secondary-button" onClick={onRetry}>Retry</button></div> : reviews.length === 0 ? <div className="empty-state"><FileText size={22} /><strong>No report data yet</strong><p>Run a review to create a report from its actual findings, summary, and coverage.</p></div> : activeReview && <>
+      <div className="report-controls"><label>Review<select value={activeReview.id} onChange={event => setReviewId(event.target.value)}>{reviews.map(review => <option value={review.id} key={review.id}>{review.filename} · {formatReviewDate(review.created_at)}</option>)}</select></label><StatusPill status={activeReview.status} /><span>{activeReview.language} · {activeReview.lines} lines</span></div>
+      <article className="report-preview panel">
+        <div className="report-brand"><span className="brand-mark"><Shield size={17} /></span><span><b>SEC-VIEW</b><small>Application security review</small></span><span className="report-date">{formatReviewDate(activeReview.updated_at ?? activeReview.created_at)}</span></div>
+        <div className="report-title"><span className="eyebrow">Executive summary</span><h2>{activeReview.filename}</h2><p>{activeReview.summary.pr_summary || activeReview.summary.markdown || "No executive summary was returned. Review the finding and coverage details below."}</p></div>
+        <div className="report-stat-grid"><div><span>Total findings</span><b>{activeReview.findings.length}</b></div><div><span>Security</span><b>{securityCount}</b></div><div><span>Code quality</span><b>{qualityCount}</b></div><div><span>Code health</span><b>{computeCodeHealthScore(activeReview.findings)}/100</b></div></div>
+        <div className="report-section"><div className="panel-heading"><div><span className="eyebrow">Risk profile</span><h2>Severity breakdown</h2></div></div><div className="report-severity">{counts.map(({ severity, count }) => <div key={severity}><span className={`severity severity-${severity}`}>{severity}</span><b>{count}</b></div>)}</div></div>
+        <div className="report-section"><div className="panel-heading"><div><span className="eyebrow">Action plan</span><h2>Prioritized remediation</h2></div></div>{activeReview.summary.roadmap.length ? <ol className="roadmap-list">{activeReview.summary.roadmap.map(item => <li key={item}>{item}</li>)}</ol> : <p className="muted">No remediation roadmap was provided.</p>}{activeReview.findings.length > 0 && <div className="report-risk-list">{[...activeReview.findings].sort((a, b) => severityOrder.indexOf(a.severity) - severityOrder.indexOf(b.severity)).slice(0, 5).map(finding => <div key={finding.id}><span className={`severity severity-${finding.severity}`}>{finding.severity}</span><span><b>{finding.title}</b><small>{finding.category} · line {finding.line_start} · {finding.scanner}</small></span></div>)}</div>}</div>
+        <div className="report-section"><div className="panel-heading"><div><span className="eyebrow">Analysis transparency</span><h2>Scanner coverage</h2></div></div><div className="coverage-grid">{coverageStages.map(stage => <div className="coverage-item" key={stage}><span className={`coverage-indicator coverage-${(activeReview.coverage[stage] ?? "not reported").replaceAll("_", "-")}`}>{activeReview.coverage[stage] === "completed" ? <CircleCheck size={15} /> : <CircleAlert size={15} />}</span><span><b>{stage.replaceAll("_", " ")}</b><small>{activeReview.coverage[stage] ?? "not reported"}</small></span></div>)}</div><p className="report-disclaimer">Analysis coverage and findings reflect the tools reported for this review. A clean result is not proof of security.</p></div>
+      </article>
+    </>}
+  </section>;
+}
+
+function AssistantWorkspace({ reviews, onNavigate }: { reviews: Review[]; onNavigate: (view: View) => void }) {
+  const aiAvailable = reviews.some(review => review.coverage.ai === "completed");
+  return <section className="assistant-workspace">
+    <div className="page-heading"><div><div className="eyebrow">Developer assistance</div><h1>AI Assistant</h1><p className="page-description">Contextual help grounded in your review findings and secure-coding references.</p></div></div>
+    <div className="assistant-shell panel">
+      <div className="assistant-thread">
+        <div className="assistant-empty-icon"><Bot size={24} /></div>
+        <span className="eyebrow">Contextual assistant</span>
+        <h2>Account-scoped chat is not connected</h2>
+        <p>This workspace has no authenticated conversational API for persisted reviews. It will not invent answers or expose your review context through an unauthenticated endpoint.</p>
+        <div className={`assistant-status ${aiAvailable ? "assistant-status-ready" : ""}`}><span className="signal-dot" /><span><b>{aiAvailable ? "AI review stage has completed for a review" : "AI review stage has not completed for your reviews"}</b><small>{aiAvailable ? "This confirms review analysis only; conversational chat is a separate capability." : "Review coverage reflects actual provider results and does not create chat responses."}</small></span></div>
+        <div className="assistant-actions"><button className="secondary-button" onClick={() => onNavigate("findings")}><ShieldAlert size={15} /> Explore findings</button><button className="primary-button" onClick={() => onNavigate("new")}><Code2 size={15} /> Start a code review</button></div>
+      </div>
+      <div className="assistant-compose" aria-disabled="true"><span>Chat is unavailable in this authenticated workspace</span><button className="primary-button" disabled aria-label="Send message"><ArrowRight size={16} /></button></div>
+    </div>
+  </section>;
+}
+
+function SettingsWorkspace({ reviews, onNavigate }: { reviews: Review[]; onNavigate: (view: View) => void }) {
+  const latestCoverage = reviews[0]?.coverage ?? {};
+  const providerConfigured = latestCoverage.ai_provider_configured === "true";
+  const modelConfigured = latestCoverage.ai_model_configured === "true";
+  const keyConfigured = latestCoverage.ai_api_key_configured === "true";
+  const connectionStatus = reviews[0]?.coverage.ai ?? "not reported";
+  return <section className="settings-workspace">
+    <div className="page-heading"><div><div className="eyebrow">Workspace controls</div><h1>Settings</h1><p className="page-description">Configuration status is read from the latest persisted review. Secrets remain server-side.</p></div></div>
+    <div className="settings-callout"><LockKeyhole size={18} /><div><b>Provider credentials are never managed in the browser</b><p>Configure AI_PROVIDER, AI_MODEL, AI_API_KEY, and AI_BASE_URL in the backend environment or secret manager, then restart the backend and worker.</p></div></div>
+    <section className="panel settings-card"><div className="panel-heading"><div><span className="eyebrow">Server-side AI</span><h2>Provider configuration</h2></div><span className={`configuration-pill ${connectionStatus === "completed" ? "configuration-good" : ""}`}>{connectionStatus === "completed" ? <CircleCheck size={14} /> : <CircleAlert size={14} />}{connectionStatus.replaceAll("_", " ")}</span></div>
+      <dl className="settings-list"><div><dt>Provider</dt><dd>{latestCoverage.ai_provider ?? "Not reported"}</dd><span>{providerConfigured ? "Configured" : "Not confirmed"}</span></div><div><dt>Model</dt><dd>{latestCoverage.ai_model ?? "Not reported"}</dd><span>{modelConfigured ? "Configured" : "Not confirmed"}</span></div><div><dt>API key</dt><dd>{keyConfigured ? "••••••••••••••••" : "Not configured"}</dd><span>{keyConfigured ? "Present · value hidden" : "Not confirmed"}</span></div><div><dt>AI review</dt><dd>{connectionStatus}</dd><span>Most recent analysis status</span></div></dl>
+      <div className="settings-footer"><p>Configuration values are not editable here. A completed review is the only evidence of a successful provider response.</p><button className="primary-button" onClick={() => onNavigate("new")}><Sparkles size={15} /> Run a review check</button></div>
+    </section>
+    <section className="panel settings-card"><div className="panel-heading"><div><span className="eyebrow">Account</span><h2>Data and identity</h2></div></div><p className="muted">Reviews are scoped to your authenticated account. Manage your sign-in and session from the account section.</p><button className="secondary-button" onClick={() => onNavigate("account")}>Open account settings <ArrowRight size={14} /></button></section>
+  </section>;
 }
 
 function App() {
@@ -271,7 +446,8 @@ function App() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [fileBusy, setFileBusy] = useState(false);
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>("dark");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -451,6 +627,9 @@ function App() {
         <span className="brand-mark" aria-hidden="true">S</span><span>Sec-View<small>Application security workspace</small></span>
       </button>
       <div className="topbar-actions">
+        <button className="mobile-menu-button" onClick={() => setMobileNavOpen(value => !value)} aria-label={mobileNavOpen ? "Close navigation" : "Open navigation"} aria-expanded={mobileNavOpen}>
+          {mobileNavOpen ? <X size={18} /> : <Menu size={18} />}
+        </button>
         <button className="theme-toggle" onClick={() => setTheme(value => value === "light" ? "dark" : "light")} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} theme`}>
           {theme === "light" ? "Dark theme" : "Light theme"}
         </button>
@@ -462,25 +641,33 @@ function App() {
       </div>
     </header>
     <div className="app-layout">
-      <aside className="sidebar" aria-label="Main navigation">
+      <aside className={`sidebar ${mobileNavOpen ? "sidebar-open" : ""}`} aria-label="Main navigation">
+        <div className="sidebar-brand"><span className="brand-mark"><Shield size={18} /></span><span><b>Sec-View</b><small>Application security</small></span></div>
         <div className="eyebrow sidebar-label">Workspace</div>
-        <button className={view === "overview" ? "nav-active" : ""} onClick={() => setView("overview")} aria-current={view === "overview" ? "page" : undefined}><span className="nav-icon">▦</span>Overview</button>
-        <button className={view === "new" ? "nav-active" : ""} onClick={startNewReview}><span className="nav-icon">＋</span>New review</button>
-        <button className={view === "history" ? "nav-active" : ""} onClick={() => setView("history")}><span className="nav-icon">◷</span>Review history<span className="nav-count">{reviews.length}</span></button>
-        <button className={view === "findings" ? "nav-active" : ""} onClick={() => setView("findings")}><span className="nav-icon">⌕</span>Findings</button>
+        {navItems.map(({ view: itemView, label, Icon }) => <button className={view === itemView || (itemView === "new" && view === "detail") ? "nav-active" : ""} key={itemView} onClick={() => {
+          if (itemView === "new") startNewReview();
+          else setView(itemView);
+          setMobileNavOpen(false);
+        }} aria-current={view === itemView ? "page" : undefined}><span className="nav-icon"><Icon size={17} strokeWidth={1.8} /></span>{label}{itemView === "findings" && <span className="nav-count">{reviews.reduce((total, review) => total + review.findings.length, 0)}</span>}</button>)}
+        <button className={view === "history" ? "nav-active" : ""} onClick={() => { setView("history"); setMobileNavOpen(false); }} aria-current={view === "history" ? "page" : undefined}><span className="nav-icon"><History size={17} strokeWidth={1.8} /></span>Review history<span className="nav-count">{reviews.length}</span></button>
         <div className="sidebar-spacer" />
-        <div className="sidebar-note"><span className="signal-dot" />Private workspace<span>Reviews shown here are scoped to your account.</span></div>
-        <button className={view === "account" ? "nav-active" : ""} onClick={() => setView("account")}><span className="nav-icon">◎</span>Account</button>
+        <div className="sidebar-note"><span className="signal-dot" />Private workspace<span>Reviews are scoped to your account.</span></div>
+        <button className={`sidebar-account ${view === "account" ? "nav-active" : ""}`} onClick={() => { setView("account"); setMobileNavOpen(false); }} aria-current={view === "account" ? "page" : undefined}>
+          <span className="avatar" aria-hidden="true">{(session.user.email ?? "U").slice(0, 1).toUpperCase()}</span><span className="sidebar-user"><b>{session.user.email ?? "Signed in"}</b><small>Account</small></span><ChevronDown size={14} />
+        </button>
       </aside>
       <main className="content">
       {error && <div className="error-box" role="alert">{error}<button onClick={() => setError("")}>Dismiss</button></div>}
       {reviewsError && !["overview", "history", "findings"].includes(view) && <div className="error-box" role="alert"><span>{reviewsError}</span><button onClick={() => void refreshReviews()}>Retry</button></div>}
       {view === "overview" && <OverviewDashboard reviews={reviews} loading={reviewsLoading} loadError={reviewsError} onRetry={() => void refreshReviews()} onNewReview={startNewReview} onShowHistory={() => setView("history")} onSelectReview={selectReview} />}
-      {view === "new" && <><SectionTabs section={section} onChange={nextSection => { setSection(nextSection); setError(""); }} />{section === "editor" ? <section className="composer"><div className="page-heading"><div><div className="eyebrow">Code review</div><h1>Review source with<br /><em>evidence.</em></h1></div><span className="status-chip">{selectedStatus}</span></div><form onSubmit={submitReview}><div className="source-toolbar"><label>Language<select value={language} onChange={event => chooseLanguage(event.target.value as SourceLanguage)}><option value="python">Python</option><option value="java">Java</option></select></label><label>Filename<input value={filename} onChange={event => setFilename(event.target.value)} /></label><label className="upload-control">{fileBusy ? "Reading…" : "Upload .py / .java"}<input type="file" accept=".py,.java,text/x-python,text/x-java" onChange={loadFile} disabled={fileBusy} /></label></div><textarea className="code-editor" value={code} onChange={event => setCode(event.target.value)} spellCheck={false} aria-label="Code Editor source code" /><div className="composer-footer"><p>Python and Java only · results come from the configured review pipeline, not fabricated AI output</p><button className="primary-button" disabled={busy || fileBusy}>{busy ? "Running review…" : "Analyze source"}</button></div></form></section> : <section className="composer quick-analyze"><div className="page-heading"><div><div className="eyebrow">Quick analyze</div><h1>Check a small<br /><em>snippet.</em></h1></div><span className="status-chip">{selectedStatus}</span></div><form onSubmit={submitQuickAnalyze}><div className="source-toolbar"><label>Filename<input value={quickFilename} onChange={event => setQuickFilename(event.target.value)} /></label></div><textarea className="code-editor quick-editor" value={quickCode} onChange={event => setQuickCode(event.target.value)} spellCheck={false} aria-label="Quick Analyze source code" placeholder="Paste a short Python or Java snippet to run through the existing authenticated review API." /><div className="composer-footer"><p>Quick Analyze uses the same authenticated API, validation, quotas, and real findings as Code Editor.</p><button className="primary-button" disabled={busy}>{busy ? "Analyzing…" : "Quick analyze"}</button></div></form></section>}</>}
+      {view === "new" && <><SectionTabs section={section} onChange={nextSection => { setSection(nextSection); setError(""); }} />{section === "editor" ? <section className="composer"><div className="page-heading"><div><div className="eyebrow">Code review</div><h1>Review source with<br /><em>evidence.</em></h1></div><span className="status-chip">{selectedStatus}</span></div><form onSubmit={submitReview}>      <div className="source-toolbar"><label>Language<select value={language} onChange={event => chooseLanguage(event.target.value as SourceLanguage)}><option value="python">Python</option><option value="java">Java</option></select></label><label>Filename<input value={filename} onChange={event => setFilename(event.target.value)} /></label><label className="upload-control"><Upload size={15} />{fileBusy ? "Reading…" : "Upload .py / .java"}<input type="file" accept=".py,.java,text/x-python,text/x-java" onChange={loadFile} disabled={fileBusy} /></label></div><textarea className="code-editor" value={code} onChange={event => setCode(event.target.value)} spellCheck={false} aria-label="Code Editor source code" /><div className="composer-footer"><p>Python and Java only · results come from the configured review pipeline, not fabricated AI output</p><button className="primary-button" disabled={busy || fileBusy}>{busy ? "Running review…" : "Analyze source"}</button></div></form></section> : <section className="composer quick-analyze"><div className="page-heading"><div><div className="eyebrow">Quick analyze</div><h1>Check a small<br /><em>snippet.</em></h1></div><span className="status-chip">{selectedStatus}</span></div><form onSubmit={submitQuickAnalyze}><div className="source-toolbar"><label>Filename<input value={quickFilename} onChange={event => setQuickFilename(event.target.value)} /></label></div><textarea className="code-editor quick-editor" value={quickCode} onChange={event => setQuickCode(event.target.value)} spellCheck={false} aria-label="Quick Analyze source code" placeholder="Paste a short Python or Java snippet to run through the existing authenticated review API." /><div className="composer-footer"><p>Quick Analyze uses the same authenticated API, validation, quotas, and real findings as Code Editor.</p><button className="primary-button" disabled={busy}>{busy ? "Analyzing…" : "Quick analyze"}</button></div></form></section>}</>}
       {view === "history" && <section className="history"><div className="page-heading"><div><div className="eyebrow">Persisted activity</div><h1>Review history</h1><p className="page-description">Previously submitted reviews and their current status.</p></div><button className="primary-button" onClick={startNewReview}>New review</button></div>{reviewsLoading ? <div className="loading-panel" role="status">Loading reviews…</div> : reviewsError ? <div className="empty-state" role="alert"><strong>Review history could not be loaded</strong><p>{reviewsError}</p><button className="secondary-button" onClick={() => void refreshReviews()}>Retry</button></div> : reviews.length === 0 ? <div className="empty-state"><strong>No reviews yet</strong><p>Submit a Python or Java file to start your first analysis.</p><button className="secondary-button" onClick={startNewReview}>Create a review</button></div> : <div className="history-list">{reviews.map(review => <button className="history-row" key={review.id} onClick={() => selectReview(review.id)}><span><strong>{review.filename}</strong><small>{review.language} · {review.lines} lines · {review.findings.length} findings · {formatReviewDate(review.created_at)}</small></span><StatusPill status={review.status} /><span className="row-arrow">→</span></button>)}</div>}</section>}
       {view === "findings" && <FindingsWorkspace reviews={reviews} loading={reviewsLoading} loadError={reviewsError} onRetry={() => void refreshReviews()} onSelectReview={selectReview} />}
       {view === "detail" && selected && <ReviewDetail review={selected} onError={setError} onDeleted={() => { setSelected(null); setView("history"); setReviews(current => current.filter(item => item.id !== selected.id)); }} />}
       {view === "detail" && !selected && <div className="empty-state"><strong>Review is not selected</strong><p>Choose an item from your review history.</p><button className="secondary-button" onClick={() => setView("history")}>Open review history</button></div>}
+      {view === "reports" && <ReportsWorkspace reviews={reviews} loading={reviewsLoading} loadError={reviewsError} onRetry={() => void refreshReviews()} />}
+      {view === "assistant" && <AssistantWorkspace reviews={reviews} onNavigate={setView} />}
+      {view === "settings" && <SettingsWorkspace reviews={reviews} onNavigate={setView} />}
       {view === "account" && <section className="account-page"><div className="page-heading"><div><div className="eyebrow">Workspace identity</div><h1>Account</h1><p className="page-description">Your authenticated Supabase account.</p></div></div><div className="panel profile-panel"><span className="avatar avatar-large" aria-hidden="true">{(session.user.email ?? "U").slice(0, 1).toUpperCase()}</span><div><span className="eyebrow">Signed in as</span><h2>{session.user.email ?? "Account email unavailable"}</h2><p className="muted">Identity and session security are managed by Supabase Auth.</p></div><button className="secondary-button" onClick={() => void signOut()} disabled={busy}>{busy ? "Signing out…" : "Sign out"}</button></div></section>}
     </main></div>
   </div>;

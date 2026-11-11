@@ -3,11 +3,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-from .analyzer import analyze
 from .ai import analyze_with_ai
-from .pipeline import merge_ai_findings, merge_summary
+from .ai.knowledge import retrieve_knowledge_for_review
+from .analyzer import analyze
+from .pipeline import build_coverage, merge_ai_findings, merge_summary
 from .scanner import scan_source
-
 from .storage import fail_job, load_job, requeue_job, save_analysis, update_job_running
 
 
@@ -60,21 +60,26 @@ def run_job(job_id: str) -> None:
         from .pipeline import _scanner_finding
 
         findings = local_findings + [_scanner_finding(item) for item in scanner_run.findings]
-        ai_outcome = analyze_with_ai(job["source"], job["filename"], job["language"], findings)
-        findings = merge_ai_findings(findings, ai_outcome.findings)
-        warnings = scanner_run.warnings + ([ai_outcome.warning] if ai_outcome.warning else [])
-        coverage = {
-            "local_evidence_rules": "completed",
-            "semgrep": "completed" if "semgrep" in scanner_run.tools else "skipped_or_failed",
-            "bandit": "completed" if "bandit" in scanner_run.tools else ("not_applicable" if job["language"] != "python" else "skipped_or_failed"),
-            "ruff": "completed" if "ruff" in scanner_run.tools else ("not_applicable" if job["language"] != "python" else "skipped_or_failed"),
-        }
-        coverage["ai"] = "completed" if ai_outcome.summary else "skipped_or_failed"
-        coverage["ai_provider"] = ai_outcome.provider or ai_outcome.status
-        coverage["ai_model"] = ai_outcome.model or (
-            "not_configured" if ai_outcome.status == "not_configured" else "unavailable"
+        knowledge_outcome = retrieve_knowledge_for_review(
+            job["source"], job["language"], findings,
         )
-        coverage["knowledge_retrieval"] = ai_outcome.knowledge_status
+        ai_outcome = analyze_with_ai(
+            job["source"],
+            job["filename"],
+            job["language"],
+            findings,
+            retrieved_knowledge=knowledge_outcome.records,
+            retrieval_status=(
+                "unavailable" if knowledge_outcome.status == "skipped_or_failed"
+                else "completed" if knowledge_outcome.records else "no_matches"
+            ),
+        )
+        findings = merge_ai_findings(findings, ai_outcome.findings)
+        warnings = scanner_run.warnings
+        warnings += [warning for warning in (knowledge_outcome.warning, ai_outcome.warning) if warning]
+        coverage = build_coverage(
+            job["language"], scanner_run.tools, ai_outcome, knowledge_outcome,
+        )
         save_analysis(job_id, findings, merge_summary(findings, ai_outcome.summary), scanner_run.tools, coverage, warnings, [{"scanner": name, "status": "completed" if name in scanner_run.tools else "skipped", "findings_count": sum(item.scanner == name for item in scanner_run.findings)} for name in ("semgrep", "bandit", "ruff")])
     except Exception as error:
         latest = load_job(job_id)

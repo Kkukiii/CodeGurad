@@ -2,13 +2,14 @@ from collections import Counter
 from hashlib import sha256
 from uuid import uuid4
 
-from .analyzer import analyze
 from .ai import analyze_with_ai
+from .ai.knowledge import KnowledgeRetrievalOutcome, retrieve_knowledge_for_review
+from .ai.provider import ai_configuration_status
+from .ai.service import AIOutcome
+from .analyzer import analyze
 from .preprocess import prepare_code
 from .scanner import ScannerFinding, scan_source
-from .schemas import Review, ReviewSummary, normalize_finding_ids
-from .schemas import Finding, Fix
-
+from .schemas import Finding, Fix, Review, ReviewSummary, normalize_finding_ids
 
 REVIEWS: dict[str, Review] = {}
 
@@ -112,32 +113,58 @@ def merge_summary(findings, ai_summary: ReviewSummary | None) -> ReviewSummary:
     })
 
 
+def build_coverage(
+    language: str,
+    tools: list[str],
+    ai_outcome: AIOutcome,
+    knowledge_outcome: KnowledgeRetrievalOutcome,
+) -> dict[str, str]:
+    configured = ai_configuration_status()
+    return {
+        "local_evidence_rules": "completed",
+        "semgrep": "completed" if "semgrep" in tools else "skipped_or_failed",
+        "bandit": "completed" if "bandit" in tools else ("not_applicable" if language != "python" else "skipped_or_failed"),
+        "ruff": "completed" if "ruff" in tools else ("not_applicable" if language != "python" else "skipped_or_failed"),
+        "ai": "completed" if ai_outcome.summary else "skipped_or_failed",
+        "ai_provider": ai_outcome.provider or ai_outcome.status,
+        "ai_model": ai_outcome.model or (
+            "not_configured" if ai_outcome.status == "not_configured" else "unavailable"
+        ),
+        **{name: str(value).lower() for name, value in configured.items()},
+        "knowledge_retrieval": knowledge_outcome.status,
+        "knowledge_retrieval_count": str(len(knowledge_outcome.records)),
+        "knowledge_retrieval_detail": knowledge_outcome.detail,
+        "knowledge_retrieval_method": "lexical",
+    }
+
+
 def run_review(code: str, filename: str) -> Review:
     prepared = prepare_code(code, filename)
     findings = analyze(prepared.lines, prepared.language)
     scanner_run = scan_source(code, filename, prepared.language)
     findings.extend(_scanner_finding(item) for item in scanner_run.findings)
-    ai_outcome = analyze_with_ai(code, filename, prepared.language, findings)
+    knowledge_outcome = retrieve_knowledge_for_review(code, prepared.language, findings)
+    ai_outcome = analyze_with_ai(
+        code,
+        filename,
+        prepared.language,
+        findings,
+        retrieved_knowledge=knowledge_outcome.records,
+        retrieval_status=(
+            "unavailable" if knowledge_outcome.status == "skipped_or_failed"
+            else "completed" if knowledge_outcome.records else "no_matches"
+        ),
+    )
     findings = merge_ai_findings(findings, ai_outcome.findings)
     review_id = str(uuid4())
     findings = normalize_finding_ids(review_id, findings)
-    warnings = scanner_run.warnings + ([ai_outcome.warning] if ai_outcome.warning else [])
+    warnings = scanner_run.warnings
+    warnings += [warning for warning in (knowledge_outcome.warning, ai_outcome.warning) if warning]
     review = Review(
         id=review_id, filename=filename, language=prepared.language,
         lines=len(prepared.lines), findings=findings, summary=merge_summary(findings, ai_outcome.summary),
         tools=scanner_run.tools,
-        coverage={
-            "local_evidence_rules": "completed",
-            "semgrep": "completed" if "semgrep" in scanner_run.tools else "skipped_or_failed",
-            "bandit": "completed" if "bandit" in scanner_run.tools else ("not_applicable" if prepared.language != "python" else "skipped_or_failed"),
-            "ruff": "completed" if "ruff" in scanner_run.tools else ("not_applicable" if prepared.language != "python" else "skipped_or_failed"),
-            "ai": "completed" if ai_outcome.summary else "skipped_or_failed",
-            "ai_provider": ai_outcome.provider or ai_outcome.status,
-            "ai_model": ai_outcome.model or (
-                "not_configured" if ai_outcome.status == "not_configured" else "unavailable"
-            ),
-            "knowledge_retrieval": ai_outcome.knowledge_status,
-        },
+        coverage=build_coverage(prepared.language, scanner_run.tools, ai_outcome, knowledge_outcome),
         warnings=["Local evidence-backed rules are active."] + warnings,
     )
     REVIEWS[review.id] = review

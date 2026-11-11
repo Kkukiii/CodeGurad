@@ -1,12 +1,12 @@
 import pytest
 
-from app import worker
-from app import scanner
+from app import scanner, worker
 from app.storage import create_review, get_job, get_review, init_db
 
 
 @pytest.fixture(autouse=True)
 def disable_external_scanners(monkeypatch):
+    monkeypatch.setenv("APP_ENV", "development")
     monkeypatch.setattr(scanner, "_scanner_executable", lambda name: None)
 
 
@@ -28,6 +28,21 @@ def test_worker_environment_excludes_application_secrets(monkeypatch):
     assert environment["AI_TOTAL_TIMEOUT_SECONDS"] == "45"
     assert environment["AI_MAX_ATTEMPTS"] == "2"
     assert environment["PYTHONNOUSERSITE"] == "1"
+
+
+def test_worker_environment_passes_configured_openrouter_values(monkeypatch):
+    monkeypatch.setenv("APP_ENV", "development")
+    monkeypatch.setenv("AI_PROVIDER", "openai-compatible")
+    monkeypatch.setenv("AI_MODEL", "provider/model-id")
+    monkeypatch.setenv("AI_API_KEY", "unit-test-key")
+    monkeypatch.setenv("AI_BASE_URL", "https://openrouter.ai/api/v1")
+
+    environment = worker._worker_environment()
+
+    assert environment["AI_PROVIDER"] == "openai-compatible"
+    assert environment["AI_MODEL"] == "provider/model-id"
+    assert environment["AI_API_KEY"] == "unit-test-key"
+    assert environment["AI_BASE_URL"] == "https://openrouter.ai/api/v1"
 
 
 def test_production_rejects_inline_worker(monkeypatch):

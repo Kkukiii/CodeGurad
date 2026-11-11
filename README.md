@@ -8,7 +8,7 @@ A Python/Java code-review service with a React/Vite client. Submitted source is 
 - [API](./docs/API.md)
 - [Security analysis](./docs/SECURITY_ANALYSIS.md)
 - [Testing and verification](./docs/TESTING.md)
-- [Milestone 2](./docs/MILESTONE_2.md)
+- [Milestones 2 and 3](./docs/MILESTONE_2.md)
 - [Deployment setup and limitations](./docs/DEPLOYMENT.md)
 - [Implementation status and latest evidence](./docs/IMPLEMENTATION_STATUS.md)
 
@@ -19,6 +19,7 @@ if ((Split-Path -Leaf (Get-Location).Path) -ne "backend") { Set-Location .\backe
 if (-not (Test-Path .venv)) { py -m venv .venv }
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 # Install scanner tools into this venv when running the scanner adapter.
 python -m pip install -r scanner-requirements.txt
 $env:APP_ENV = "development"
@@ -56,7 +57,7 @@ Vite reads the ignored root `.env.local` because `frontend/vite.config.ts` sets 
 ## Workflow and boundaries
 
 - React uses Supabase Auth and sends the current access token to FastAPI `/api/v1` routes.
-- The signed-in dashboard overview, recent activity, severity totals, and searchable/filterable findings are derived from the caller's persisted review history. Projects and report exports are not presented because the backend does not currently implement them. Light/dark theme selection is available in the workspace.
+- The signed-in dashboard overview, recent activity, severity totals, and searchable/filterable findings are derived from the caller's persisted review history. Projects and report exports are not presented because the backend does not currently implement them. Light/dark theme selection is available in the workspace. The deterministic code-health score used in the UI is: 100 - (25 × critical + 15 × high + 8 × medium + 4 × low + 1 × info), clamped to a 0–100 range, and zero findings produce a score of 100. This is a review-health indicator, not proof of security.
 - The protected API validates source size, filename, language, user identity, quotas, and review ownership before storing a queued review and job.
 - SQLite is the local adapter. `DATABASE_URL` selects PostgreSQL; missing production DB/auth configuration fails closed.
 - The worker runs local evidence rules and optional Semgrep, Bandit, Ruff, and hosted-LLM stages. Scanner failure/skips are reported as coverage warnings, not clean results.
@@ -83,6 +84,12 @@ Vite reads the ignored root `.env.local` because `frontend/vite.config.ts` sets 
 The Semgrep, Bandit, and Ruff packages are pinned in `backend/scanner-requirements.txt`; the backend venv was verified with Semgrep 1.136.0, Bandit 1.8.6, Ruff 0.12.10, and setuptools 80.10.2. Semgrep emitted an OpenTelemetry `pkg_resources` warning recommending `setuptools<81`, which justifies that compatibility pin. Semgrep 1.136.0 requires `opentelemetry-api~=1.25.0`, so `backend/requirements.txt` caps FastAPI below 0.142, where the FastAPI dependency changes to `opentelemetry-api>=1.44.0`. The scanner adapter resolves executables from the active venv when its `Scripts`/`bin` directory is not on `PATH`. The pytest requirement is `>=9.0.3,<10` to avoid PYSEC-2026-1845, fixed in 9.0.3.
 
 ## AI and knowledge data
+
+In development, the backend loads `backend/.env` before application modules initialize; process environment values take precedence. Copy `.env.example` once, fill the values locally, and restart the backend after changing them. Production ignores this file and requires explicit backend environment configuration.
+
+For an OpenAI-compatible provider, configure `AI_PROVIDER=openai-compatible`, `AI_MODEL` with a model ID provided by your service, `AI_API_KEY` with a server-only credential, and `AI_BASE_URL` with the service's API base URL (not the `/chat/completions` path). For OpenRouter, use `AI_BASE_URL=https://openrouter.ai/api/v1`. The client adds `/chat/completions`; remote URLs must use HTTPS. The default request timeouts are 5 seconds to connect, 20 seconds to read, and 45 seconds total. Set the values in `backend/.env` for development or in the backend process/secret manager for deployment, then restart the backend and worker so they load the updated configuration.
+
+Coverage reports local rules, Semgrep, Bandit, Ruff, AI, and knowledge retrieval independently. AI is `completed` only after a provider response passes structured validation; missing configuration or provider/response failures result in `skipped_or_failed`. `ai_provider_configured`, `ai_model_configured`, and `ai_api_key_configured` are safe boolean strings; the key itself is never returned. Knowledge retrieval runs even when AI is unconfigured. A successful search with no results is `completed` with count `0`; an unavailable/invalid knowledge base is `skipped_or_failed` and includes a non-sensitive warning. Retrieval is lexical, not vector or embedding search; the bundled records are synthetic guidance, not authoritative security references.
 
 The optional OpenAI-compatible service validates a strict structured response and labels model findings as potential. The code-analysis, security, remediation, and PR-summary roles are configured in `backend/data/ai_modules.json` and returned in one provider response to avoid multiplying calls. Provider errors and missing configuration are represented as skipped/failed AI coverage; deterministic local/scanner results remain available. Source, filename, scanner findings, and retrieved knowledge are sent as JSON-encoded untrusted context only when the provider is configured. Prompt/response byte limits, connection/read/total timeouts, and bounded retries apply. Lexical retrieval selects up to three same-language records from bundled synthetic knowledge data and validates cited IDs. This is not embedding/vector RAG, and the records are not authoritative security guidance. Mocked provider tests are not live inference; no live provider request was performed. See [architecture](./docs/ARCHITECTURE.md) and [security analysis](./docs/SECURITY_ANALYSIS.md).
 
